@@ -15,6 +15,7 @@
    // C/C++:         
    #include <memory> 
 #include "lib.h"
+#include "node.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -75,11 +76,14 @@ namespace Eng {
 		bool free();
 		void swapBuffers();
 		void setKeyboardCallback(KeyboardCallback cb);
+		std::shared_ptr<eng::Node> getNode(const std::string& name);
 
 		void onKeyPressed(unsigned char key, int x, int y);
-
+		void startLoop();
 		void onDisplay();
 		void update();
+
+		void setParent(const std::string& childName, const std::string& parentName);
 
 
 
@@ -133,8 +137,10 @@ namespace Eng {
    
 	   size_t prev_time = 0;
 	   KeyboardCallback keyboardCallback = nullptr;
+	   
 	   void initialize();
 	   static void timerCallback(int value);
+	   
 
 	   
 

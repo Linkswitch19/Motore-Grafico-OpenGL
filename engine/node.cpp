@@ -27,7 +27,7 @@ namespace eng {
         }
     }
 
-    const std::vector<std::shared_ptr<Node>>& Node::get_children() const {
+     std::vector<std::shared_ptr<Node>>& Node::get_children()  {
         return children;
     }
 

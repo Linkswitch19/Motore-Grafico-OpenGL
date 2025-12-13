@@ -25,7 +25,7 @@ namespace eng {
 
         virtual void add_child(std::shared_ptr<Node> child);
 
-        const std::vector<std::shared_ptr<Node>>& get_children() const;
+         std::vector<std::shared_ptr<Node>>& get_children() ;
     };
 
 }

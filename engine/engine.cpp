@@ -52,6 +52,7 @@ struct Eng::Base::Reserved
    std::shared_ptr<eng::Node> sceneRoot = nullptr;
    std::unique_ptr<eng::Camera> camera = nullptr;
    
+   
 
    /**
     * Constructor.
@@ -172,10 +173,16 @@ bool ENG_API Eng::Base::init(const char* title, unsigned int width, unsigned int
    std::cout << "[>] " << LIB_NAME << " initialized" << std::endl;
    reserved->initFlag = true;
    initialize();
-   glutMainLoop();
+   
    
    std::cout << "[application terminated]" << std::endl;
    return true;
+}
+
+
+
+void ENG_API Eng::Base::startLoop() {
+    glutMainLoop();
 }
 
 void ENG_API Eng::Base::initialize()
@@ -199,20 +206,6 @@ void ENG_API Eng::Base::initialize()
     glEnable(GL_LIGHT0);		      //Enabling Light0	
 
 
-    // --- INIZIALIZZAZIONE HANOI ---
-    // Svuota tutto per sicurezza
-    poles[0].clear();
-    poles[1].clear();
-    poles[2].clear();
-    heldDisk = -1;
-
-    // Riempiamo il primo palo (Palo 0) con 5 dischi
-    // Li inseriamo dal più grande (0) al più piccolo (4) o viceversa.
-    // Usiamo numeri interi per rappresentare la grandezza: 0 = più piccolo, 4 = più grande
-    int numDiscs = 9;
-    for (int i = numDiscs - 1; i >= 0; i--) {
-        poles[0].push_back(i);
-    }
 
     //Globals initializations
     prev_time = glutGet(GLUT_ELAPSED_TIME);
@@ -371,43 +364,7 @@ void ENG_API Eng::Base::onKeyPressed(unsigned char key, int x, int y) {
     }
 
 
-    // Logica di gioco Hanoi
-    int poleIndex = -1;
-
-    if (key == '1') poleIndex = 0;
-    else if (key == '2') poleIndex = 1;
-    else if (key == '3') poleIndex = 2;
-
-    if (poleIndex != -1)
-    {
-        // CASO 1: Mano vuota, provo a PRENDERE un disco
-        if (heldDisk == -1)
-        {
-            if (!poles[poleIndex].empty())
-            {
-                heldDisk = poles[poleIndex].back(); // Prendo il disco in cima
-                poles[poleIndex].pop_back();        // Lo rimuovo dal palo
-                std::cout << "Preso disco " << heldDisk << " dal palo " << poleIndex + 1 << std::endl;
-            }
-        }
-        // CASO 2: Ho un disco, provo a POSARLO
-        else
-        {
-            // Regola: posso posare se il palo è vuoto OPPURE se il disco sotto è più grande
-            // (Assumiamo che numeri più grandi siano dischi più grandi)
-            if (poles[poleIndex].empty() || poles[poleIndex].back() > heldDisk)
-            {
-                poles[poleIndex].push_back(heldDisk);
-                std::cout << "Posato disco " << heldDisk << " sul palo " << poleIndex + 1 << std::endl;
-                heldDisk = -1; // Mano vuota
-            }
-            else
-            {
-                std::cout << "Mossa non valida! Il disco sotto e' troppo piccolo." << std::endl;
-            }
-        }
-    }
-
+   
 
 
     if (keyboardCallback) keyboardCallback(key, x, y);
@@ -576,29 +533,6 @@ void ENG_API Eng::Base::onDisplay()
     snprintf(buffer, sizeof(buffer), "LOD: %d", detail);
     glRasterPos2f(textX, textY);
     glutBitmapString(GLUT_BITMAP_8_BY_13, (unsigned char*)buffer);
-
-    // 3. Stampa ISTRUZIONI (Sopra LOD)
-    textY += stepY;
-    snprintf(buffer, sizeof(buffer), "Comandi: Premi 1, 2, 3 per spostare i dischi ogni numero corrisponde ad un palo");
-    glRasterPos2f(textX, textY);
-    glutBitmapString(GLUT_BITMAP_8_BY_13, (unsigned char*)buffer);
-
-
-    // 4. Stampa STATO MANO (Sopra istruzioni - Molto utile!)
-    textY += stepY;
-    if (heldDisk != -1) {
-        // Se hai un disco, scriviamo quale (Aggiungiamo un colore verde per evidenziare)
-        glColor3f(0.5f, 1.0f, 0.5f);
-        snprintf(buffer, sizeof(buffer), "Stato: Hai in mano il disco %d", heldDisk+1);
-    }
-    else {
-        // Se la mano è vuota
-        glColor3f(1.0f, 1.0f, 1.0f);
-        snprintf(buffer, sizeof(buffer), "Stato: Mano vuota - Seleziona un palo");
-    }
-    glRasterPos2f(textX, textY);
-    glutBitmapString(GLUT_BITMAP_8_BY_13, (unsigned char*)buffer);
-
     // Reactivate lighting:
     glEnable(GL_LIGHTING);
 
@@ -615,6 +549,62 @@ void ENG_API Eng::Base::update()
     glutMainLoopEvent();
 }
 
+std::shared_ptr<eng::Node> findParentOf(std::shared_ptr<eng::Node> current, const std::string& childName) {
+    if (!current) return nullptr;
+
+    for (auto& child : current->get_children()) {
+        // Se questo child è quello che cerchiamo, allora 'current' è il padre!
+        if (child->get_name() == childName) {
+            return current;
+        }
+
+        // Altrimenti cerca nei nipoti (ricorsione)
+        auto result = findParentOf(child, childName);
+        if (result) return result;
+    }
+    return nullptr;
+}
+
+void ENG_API Eng::Base::setParent(const std::string& childName, const std::string& parentName)
+{
+    if (!reserved->sceneRoot) return;
+
+    // 1. Trova il nodo figlio e il suo ATTUALE padre
+    auto currentParent = findParentOf(reserved->sceneRoot, childName);
+    if (!currentParent) return; // Nodo non trovato o orfano
+
+    // 2. Trova il puntatore al nodo figlio
+    std::shared_ptr<eng::Node> childNode = nullptr;
+    auto& siblings = currentParent->get_children();
+
+    // Rimuovi dal vecchio padre
+    for (auto it = siblings.begin(); it != siblings.end(); ) {
+        if ((*it)->get_name() == childName) {
+            childNode = *it;
+            it = siblings.erase(it); // <--- LO STACCHI QUI
+            break;
+        }
+        else {
+            ++it;
+        }
+    }
+
+    if (!childNode) return; // Errore strano, non trovato nella lista
+
+    // 3. Trova il NUOVO padre
+    std::shared_ptr<eng::Node> newParentNode = getNode(parentName);
+    if (!newParentNode) {
+        // Se il nuovo padre non esiste, riattacca al vecchio per non rompere tutto
+        currentParent->add_child(childNode);
+        std::cout << "Errore: Nuovo padre " << parentName << " non trovato!" << std::endl;
+        return;
+    }
+
+    // 4. ATTACCA AL NUOVO PADRE
+    newParentNode->add_child(childNode);
+    std::cout << "Reparenting: " << childName << " ora è figlio di " << parentName << std::endl;
+}
+
 void ENG_API Eng::Base::timerCallback(int value)
 {
     Eng::Base& eng = Eng::Base::getInstance();
@@ -625,6 +615,18 @@ void ENG_API Eng::Base::timerCallback(int value)
 
     // Register the next update:
     glutTimerFunc(1000, timerCallback, 0);
+}
+std::shared_ptr<eng::Node> findNodeRecursive(std::shared_ptr<eng::Node> current, const std::string& name) {
+    if (current->get_name() == name) return current;
+    for (auto& child : current->get_children()) {
+        auto res = findNodeRecursive(child, name);
+        if (res) return res;
+    }
+    return nullptr;
+}
+std::shared_ptr<eng::Node> ENG_API Eng::Base::getNode(const std::string& name) {
+    if (!reserved->sceneRoot) return nullptr;
+    return findNodeRecursive(reserved->sceneRoot, name);
 }
 
 
