@@ -401,21 +401,9 @@ void ENG_API Eng::Base::onDisplay()
     glLoadMatrixf(glm::value_ptr(perspective));
     glMatrixMode(GL_MODELVIEW);
 
-    // Set light position:
-    glm::mat4 transLight = glm::translate(glm::mat4(1.0f), lightPosition);
-    glLoadMatrixf(glm::value_ptr(transLight));
+   
 
-    // Draw a small emissive sphere to show light position:   
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, glm::value_ptr(glm::vec4(1.0f)));
-    glutSolidSphere(0.5, 8, 8);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, glm::value_ptr(glm::vec4(0.0f)));
-
-    // Light position is set to object coordinates and is modified by the current OpenGL matrix (as with any other object):
-    glm::vec4 objectCoordPosition(0.0f, 0.0f, 0.0f, 1.0f);
-    glLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(objectCoordPosition));
-    glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(lightAmbient));
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(lightDiffuse));
-    glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(lightSpecular));
+  
 
     // Set material properties:
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, materialShininess);
