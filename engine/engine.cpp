@@ -18,6 +18,11 @@
     #include <glm/gtc/type_ptr.hpp>
     #include<glm/gtc/matrix_transform.hpp>
     #include <GL/freeglut.h>
+    #include "ovo_parser.h"
+    #include "mesh.h"      
+    #include "material.h"  
+    #include "texture.h"   
+    #include <tuple>       
    
 
     
@@ -43,6 +48,7 @@ struct Eng::Base::Reserved
    bool initFlag;
    float clearColor[3] = { 0.f, 0.f, 0.f };
    int windowId;
+   std::shared_ptr<eng::Node> sceneRoot = nullptr;
    
 
    /**
@@ -181,6 +187,10 @@ void ENG_API Eng::Base::initialize()
     GLfloat light0_pos[] = { 0.0f, 0.0f, 0.0f, 1.0f }; // A positional light
     glLightfv(GL_LIGHT0, GL_POSITION, light0_pos);
 
+    // Carica OVO
+    reserved->sceneRoot = eng::OVOParser::from_file("torretina.ovo");
+    if (!reserved->sceneRoot) std::cout << "Errore caricamento OVO" << std::endl;
+
     glEnable(GL_LIGHTING);			  //Enabling Lighting
     glEnable(GL_LIGHT0);		      //Enabling Light0	
 
@@ -297,6 +307,86 @@ void ENG_API Eng::Base::onKeyPressed(unsigned char key, int x, int y) {
     if (keyboardCallback) keyboardCallback(key, x, y);
 }
 
+
+
+
+void renderOvoNode(std::shared_ptr<eng::Node> node, glm::mat4 parentMatrix) {
+    if (!node) return;
+
+    // 1. Calcola matrice globale
+    glm::mat4 globalMatrix = parentMatrix * node->get_base_matrix();
+
+    // 2. Controlla se è una Mesh
+    std::shared_ptr<eng::Mesh> mesh = std::dynamic_pointer_cast<eng::Mesh>(node);
+
+    if (mesh) {
+        glPushMatrix();
+        glLoadMatrixf(glm::value_ptr(globalMatrix));
+
+        // Setup Materiale
+        if (mesh->get_material()) {
+            auto mat = mesh->get_material();
+
+            // Imposta colori
+            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, glm::value_ptr(glm::vec4(mat->get_ambient_color(), 1.0f)));
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, glm::value_ptr(glm::vec4(mat->get_diffuse_color(), 1.0f)));
+            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, glm::value_ptr(glm::vec4(mat->get_specular_color(), 1.0f)));
+            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, mat->get_shininess());
+
+            // Gestione Texture
+            if (mat->get_texture()) {
+                glEnable(GL_TEXTURE_2D);
+                // IMPORTANTE: Assicurati che la tua classe Texture abbia un metodo per ottenere l'ID
+                // Se la texture non si vede, potrebbe mancare il bind qui, es:
+                // glBindTexture(GL_TEXTURE_2D, mat->get_texture()->get_texture_id()); 
+            }
+            else {
+                glDisable(GL_TEXTURE_2D);
+            }
+        }
+
+        // Setup Geometry
+        const auto& verts = mesh->get_vertices();
+        const auto& norms = mesh->get_normals();
+        const auto& uvs = mesh->get_uvs();
+        const auto& faces = mesh->get_faces();
+
+        glBegin(GL_TRIANGLES);
+        for (const auto& face : faces) {
+            // Estrai indici
+            uint32_t i0 = std::get<0>(face);
+            uint32_t i1 = std::get<1>(face);
+            uint32_t i2 = std::get<2>(face);
+
+            // Vertice 0
+            if (i0 < norms.size()) glNormal3fv(glm::value_ptr(norms[i0]));
+            if (i0 < uvs.size()) glTexCoord2fv(glm::value_ptr(uvs[i0]));
+            if (i0 < verts.size()) glVertex3fv(glm::value_ptr(verts[i0]));
+
+            // Vertice 1
+            if (i1 < norms.size()) glNormal3fv(glm::value_ptr(norms[i1]));
+            if (i1 < uvs.size()) glTexCoord2fv(glm::value_ptr(uvs[i1]));
+            if (i1 < verts.size()) glVertex3fv(glm::value_ptr(verts[i1]));
+
+            // Vertice 2
+            if (i2 < norms.size()) glNormal3fv(glm::value_ptr(norms[i2]));
+            if (i2 < uvs.size()) glTexCoord2fv(glm::value_ptr(uvs[i2]));
+            if (i2 < verts.size()) glVertex3fv(glm::value_ptr(verts[i2]));
+        }
+        glEnd();
+
+        glPopMatrix();
+    }
+
+    // 3. Ricorsione sui figli
+    for (const auto& child : node->get_children()) {
+        renderOvoNode(child, globalMatrix);
+    }
+}
+
+
+
+
 void ENG_API Eng::Base::onDisplay()
 {
     // Clear the screen:
@@ -341,8 +431,20 @@ void ENG_API Eng::Base::onDisplay()
     // Reimposta la matrice Identity per posizionare la Torre in coordinate mondo
     glLoadMatrixf(glm::value_ptr(glm::mat4(1.0f)));
 
+
+    // --- NUOVO DISEGNO ---
+    if (reserved->sceneRoot) {
+        // Sposta la torre dove vuoi (es. un po' indietro e in basso come l'originale)
+        glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -5.0f, -40.0f));
+
+        // Chiama la funzione ricorsiva
+        renderOvoNode(reserved->sceneRoot, modelMatrix);
+    }
+
+
+
     // Disegna la Torre di Hanoi con 5 dischi
-    drawHanoi(9);
+    //drawHanoi(9);
 
     //////////////////////////
     // Switch to 2D rendering:
@@ -405,7 +507,7 @@ void ENG_API Eng::Base::onDisplay()
     glutSwapBuffers();
 
     // Force rendering refresh:
-    glutPostWindowRedisplay(windowId);
+    glutPostWindowRedisplay(this->reserved->windowId);
 }
 
 void ENG_API Eng::Base::update()

@@ -30,6 +30,14 @@ namespace eng {
         void set_specular_color(const glm::vec3& c);
         void set_shininess(float s);
         void set_texture(std::shared_ptr<Texture> tex);
+
+
+        glm::vec3 get_emission_color() const;
+        glm::vec3 get_ambient_color() const;
+        glm::vec3 get_diffuse_color() const;
+        glm::vec3 get_specular_color() const;
+        float get_shininess() const;
+        std::shared_ptr<Texture> get_texture() const;
     };
 
 } 

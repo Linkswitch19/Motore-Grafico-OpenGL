@@ -99,7 +99,7 @@ namespace Eng {
 
 		int fps = 0;
 		int frames = 0;
-		int windowId;
+		
 		int detail = 1;
 
 

@@ -49,6 +49,9 @@ std::unordered_map<std::string, std::shared_ptr<Material>> OVOParser::materials;
  */
 std::shared_ptr<Node> ENG_API OVOParser::from_file(const std::string path) {
     OVOParser::materials.clear();
+
+   
+
     FILE* file = fopen(path.c_str(), "rb");
     if (file == nullptr) ERROR("Failed to read file '%s'", path.c_str());
     DEBUG("Loading file '%s'...", path.c_str());

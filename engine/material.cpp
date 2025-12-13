@@ -11,4 +11,30 @@ namespace eng {
 	void ENG_API Material::set_shininess(float s) { shininess = s; }
 	void ENG_API Material::set_texture(std::shared_ptr<Texture> tex) { texture = tex; }
 
+
+
+    glm::vec3 Material::get_emission_color() const {
+        return this->emission;
+    }
+
+    glm::vec3 Material::get_ambient_color() const {
+        return this->ambient;
+    }
+
+    glm::vec3 Material::get_diffuse_color() const {
+        return this->diffuse;
+    }
+
+    glm::vec3 Material::get_specular_color() const {
+        return this->specular;
+    }
+
+    float Material::get_shininess() const {
+        return this->shininess;
+    }
+
+    std::shared_ptr<Texture> Material::get_texture() const {
+        return this->texture;
+    }
+
 }

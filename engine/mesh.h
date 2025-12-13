@@ -26,6 +26,13 @@ namespace eng {
             const std::vector<std::tuple<uint32_t, uint32_t, uint32_t>>& f,
             const std::vector<glm::vec3>& n,
             const std::vector<glm::vec2>& uv);
+
+        const std::vector<glm::vec3>& get_vertices() const;
+        const std::vector<glm::vec3>& get_normals() const;
+        const std::vector<glm::vec2>& get_uvs() const;
+        const std::vector<std::tuple<uint32_t, uint32_t, uint32_t>>& get_faces() const;
     };
+
+       
 
 }
