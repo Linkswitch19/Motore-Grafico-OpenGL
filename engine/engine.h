@@ -136,13 +136,10 @@ namespace Eng {
 	   void initialize();
 	   static void timerCallback(int value);
 
-	   void drawGrid(float size, int tesselation);
+	   
 
 	   void  reshapeCallback(int width, int height);
 
-	   void drawSolidCylinder(float radius, float height, int slices);
-
-	   void  drawHanoi(int numDiscs);
 
    
 

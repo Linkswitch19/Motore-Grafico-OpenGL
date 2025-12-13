@@ -411,10 +411,6 @@ void ENG_API Eng::Base::onDisplay()
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, glm::value_ptr(materialDiffuse));
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, glm::value_ptr(materialSpecular));
 
-    // Position and render the grid:
-    glm::mat4 transGrid = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -10.0f, -50.0f));
-    glLoadMatrixf(glm::value_ptr(transGrid));
-    drawGrid(75.0f, (int)pow(8, detail));
 
     // Reimposta la matrice Identity per posizionare la Torre in coordinate mondo
     glLoadMatrixf(glm::value_ptr(glm::mat4(1.0f)));
@@ -431,8 +427,7 @@ void ENG_API Eng::Base::onDisplay()
 
 
 
-    // Disegna la Torre di Hanoi con 5 dischi
-    //drawHanoi(9);
+  
 
     //////////////////////////
     // Switch to 2D rendering:
@@ -515,39 +510,7 @@ void ENG_API Eng::Base::timerCallback(int value)
     glutTimerFunc(1000, timerCallback, 0);
 }
 
-/**
- * Renders a square grid on plane XZ made of triangles.
- * @param size size of the grid
- * @param tesselation number of triangles to use on each direction
- */
-void ENG_API Eng::Base::drawGrid(float size, int tesselation)
-{
-    // Compute starting coordinates and step size:
-    float startX = -size / 2.0f;
-    float startZ = size / 2.0f;
-    float triangleSize = size / (float)tesselation;
 
-    // Normal is just one, set it now:
-    glNormal3f(0.0f, 1.0f, 0.0f);
-
-    // Go over XZ and draw triangles:
-    for (int curZ = 0; curZ < tesselation; curZ++)
-    {
-        for (int curX = 0; curX < tesselation; curX++)
-        {
-            glBegin(GL_TRIANGLE_STRIP);
-            glVertex3f(startX, 0.0f, startZ);
-            glVertex3f(startX + triangleSize, 0.0f, startZ);
-            glVertex3f(startX, 0.0f, startZ - triangleSize);
-            glVertex3f(startX + triangleSize, 0.0f, startZ - triangleSize);
-            glEnd();
-
-            startX += triangleSize;
-        }
-        startX = -size / 2.0f;
-        startZ -= triangleSize;
-    }
-}
 
 
 void ENG_API Eng::Base::reshapeCallback(int width, int height)
@@ -561,105 +524,8 @@ void ENG_API Eng::Base::reshapeCallback(int width, int height)
 }
 
 
-// Funzione helper locale per disegnare un cilindro pieno orientato verso l'alto
-void ENG_API Eng::Base::drawSolidCylinder(float radius, float height, int slices) {
-    GLUquadric* quad = gluNewQuadric();
-    gluQuadricNormals(quad, GLU_SMOOTH);
-
-    glPushMatrix();
-    // Ruota per allineare all'asse Y (alto) invece che Z
-    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
-
-    // Disegna il tubo
-    gluCylinder(quad, radius, radius, height, slices, 1);
-
-    // Disegna il tappo inferiore (base)
-    glPushMatrix();
-    glScalef(-1, 1, 1); // Inverte le normali per il tappo sotto
-    gluDisk(quad, 0.0, radius, slices, 1);
-    glPopMatrix();
-
-    // Disegna il tappo superiore
-    glPushMatrix();
-    glTranslatef(0.0f, 0.0f, height);
-    gluDisk(quad, 0.0, radius, slices, 1);
-    glPopMatrix();
-    glPopMatrix();
-
-    gluDeleteQuadric(quad);
-}
 
 
-void ENG_API Eng::Base::drawHanoi(int numDiscs) // numDiscs qui è ignorato, usiamo i vector
-{
-    float poleHeight = 10.0f;
-    float poleRadius = 0.3f;
-    float discHeight = 1.0f;
-    float maxDiscRadius = 4.0f;
-    glm::vec3 basePos(0.0f, -5.0f, -40.0f);
 
-    // Colori
-    glm::vec4 discColors[] = {
-        {1.0f, 0.0f, 0.0f, 1.0f}, // Rosso (piccolo)
-        {0.0f, 1.0f, 0.0f, 1.0f}, // Verde
-        {0.0f, 0.0f, 1.0f, 1.0f}, // Blu
-        {1.0f, 1.0f, 0.0f, 1.0f}, // Giallo
-        {0.0f, 1.0f, 1.0f, 1.0f}, // Ciano (grande)
-    };
 
-    // 1. Disegna i 3 pali (STRUTTURA FISSA)
-    for (int i = 0; i < 3; i++)
-    {
-        glPushMatrix();
-        glm::vec3 polePos = basePos;
-        polePos.x += (i - 1) * 12.0f;
-        glTranslatef(polePos.x, polePos.y, polePos.z);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, glm::value_ptr(glm::vec4(0.6f, 0.4f, 0.2f, 1.0f)));
-        drawSolidCylinder(poleRadius, poleHeight, 20);
-        glPopMatrix();
-    }
-
-    // 2. Disegna i dischi presenti SUI PALI
-    // Iteriamo sui 3 pali
-    for (int p = 0; p < 3; p++)
-    {
-        float pX = basePos.x + (p - 1) * 12.0f; // Posizione X del palo corrente
-
-        // Iteriamo sui dischi di questo palo
-        for (size_t i = 0; i < poles[p].size(); i++)
-        {
-            int discID = poles[p][i]; // 0 è piccolo, 4 è grande
-
-            // Calcolo raggio: discID 0 = raggio min, discID 4 = raggio max
-            // Mappiamo: Raggio = Base + (ID * fattore)
-            float currentRadius = 1.5f + (discID * 0.6f);
-
-            glPushMatrix();
-            // Y = base + altezza disco * indice nello stack
-            float yPos = basePos.y + (i * discHeight);
-
-            glTranslatef(pX, yPos, basePos.z);
-
-            // Colore basato sull'ID del disco
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, glm::value_ptr(discColors[discID % 5]));
-
-            drawSolidCylinder(currentRadius, discHeight, 30);
-            glPopMatrix();
-        }
-    }
-
-    // 3. Disegna il disco "IN MANO" (se presente)
-    if (heldDisk != -1)
-    {
-        float currentRadius = 1.5f + (heldDisk * 0.6f);
-        glPushMatrix();
-        // Lo disegniamo in alto al centro (o sopra l'ultimo palo usato, ma centro è più semplice)
-        // Y = 10.0f (fluttuante in aria)
-        glTranslatef(0.0f, 10.0f, basePos.z);
-
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, glm::value_ptr(discColors[heldDisk % 5]));
-        drawSolidCylinder(currentRadius, discHeight, 30);
-        glPopMatrix();
-    }
-}
 
