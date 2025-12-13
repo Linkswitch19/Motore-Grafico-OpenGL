@@ -92,6 +92,7 @@
     <ClCompile Include="ovo_parser.cpp" />
     <ClCompile Include="point_light.cpp" />
     <ClCompile Include="spot_light.cpp" />
+    <ClCompile Include="textHUD.cpp" />
     <ClCompile Include="texture.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -106,6 +107,7 @@
     <ClInclude Include="ovo_parser.h" />
     <ClInclude Include="point_light.h" />
     <ClInclude Include="spot_light.h" />
+    <ClInclude Include="textHUD.h" />
     <ClInclude Include="texture.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -13,9 +13,10 @@
 //////////////
 
    // C/C++:         
-   #include <memory> 
+#include <memory> 
 #include "lib.h"
 #include "node.h"
+#include "textHUD.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -60,6 +61,7 @@ namespace Eng {
 		   // Const/dest:
 		Base(Base const&) = delete;
 		~Base();
+		std::vector<eng::TextHUD> hudList;
 
 		// Operators:
 		void operator=(Base const&) = delete;
@@ -86,6 +88,8 @@ namespace Eng {
 
 		void setParent(const std::string& childName, const std::string& parentName);
 		void setMessage(const std::string& msg);
+		void addText(const eng::TextHUD& textObject);
+		void clearHUD();
 		 
 
 

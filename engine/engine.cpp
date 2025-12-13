@@ -526,9 +526,19 @@ void ENG_API Eng::Base::onDisplay()
     glColor3f(1.0f, 1.0f, 1.0f);
 
     char buffer[128];
-    float textX = 10.0f; // Margine sinistro
-    float textY = 20.0f; // Altezza iniziale dal basso
-    float stepY = 15.0f; // Spazio tra le righe
+
+    //finestra lughezze
+    float w = (float)glutGet(GLUT_WINDOW_WIDTH);
+    float h = (float)glutGet(GLUT_WINDOW_HEIGHT);
+
+    float textX = w - 90.0f;
+
+ 
+    float textY = h - 50.0f;
+
+  
+    float stepY = 15.0f;
+   
 
     // 1. Stampa FPS (In basso)
     sprintf_s(buffer, sizeof(buffer), "FPS: %d", fps);
@@ -540,17 +550,23 @@ void ENG_API Eng::Base::onDisplay()
     snprintf(buffer, sizeof(buffer), "LOD: %d", detail);
     glRasterPos2f(textX, textY);
     glutBitmapString(GLUT_BITMAP_8_BY_13, (unsigned char*)buffer);
+    textY += stepY;
+
+    // Lista Comandi (disegnati dal basso verso l'alto)
+    for (auto& textItem : hudList) {
+        textItem.render();
+        
+    }
+
     // Reactivate lighting:
     glEnable(GL_LIGHTING);
 
     // Swap this context's buffer:
     frames++;
     if (!currentMessage.empty()) {
-        glColor3f(1.0f, 1.0f, 0.0f); // Giallo
-        glRasterPos2f(window_width / 2.0f - 50.0f, window_height - 50.0f); // Posizione (Centrato in alto)
-
-        // Disegna la stringa
-        glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)currentMessage.c_str());
+         
+        glRasterPos2f(window_width / 2.0f - 50.0f, window_height - 50.0f); 
+        glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)currentMessage.c_str());
     }
 
     glutSwapBuffers();
@@ -659,6 +675,16 @@ void ENG_API Eng::Base::reshapeCallback(int width, int height)
 
 void ENG_API Eng::Base::setMessage(const std::string& msg) {
     this->currentMessage = msg;
+}
+
+void ENG_API Eng::Base::addText(const eng::TextHUD& textObject)
+{
+    this->hudList.push_back(textObject);
+}
+
+void ENG_API Eng::Base::clearHUD()
+{
+    this->hudList.clear();
 }
 
 
