@@ -96,4 +96,18 @@ namespace eng {
         Up = glm::normalize(glm::cross(Right, Front));
     }
 
+
+    void ENG_API Camera::RotateBy(float angle)
+    {
+        Yaw += angle;
+
+        // Mantiene lo Yaw leggibile (opzionale, ma buona pratica)
+        // Se supera 360, ricomincia da 0
+        if (Yaw > 360.0f) Yaw -= 360.0f;
+        if (Yaw < -360.0f) Yaw += 360.0f;
+
+        // Ricalcola i vettori Front, Right, Up con il nuovo angolo
+        updateCameraVectors();
+    }
+
 }

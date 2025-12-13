@@ -296,6 +296,75 @@ void ENG_API Eng::Base::onKeyPressed(unsigned char key, int x, int y) {
         case 'e': // Opzionale: Scendi
             reserved->camera->ProcessKeyboard(eng::DOWN, dt);
             break;
+
+
+        case 'j':
+        {
+            // Invece di ruotare solo la testa, ci spostiamo DI LATO alla torre
+            // La torre è a Z = -40. 
+            // Posizione Nuova: X = 50, Z = -40 (Di lato alla torre)
+            // Yaw = -180 (Guarda verso sinistra, verso la torre)
+
+            static bool isSideView = false;
+
+            if (!isSideView) {
+                // Vai di lato
+                reserved->camera = std::make_unique<eng::Camera>(
+                    glm::vec3(60.0f, 10.0f, -40.0f), // Posizionati a destra della torre
+                    glm::vec3(0.0f, 1.0f, 0.0f),
+                    -180.0f, // Guarda verso sinistra (dove sta la torre)
+                    0.0f
+                );
+                isSideView = true;
+            }
+            else {
+                // Torna frontale
+                reserved->camera = std::make_unique<eng::Camera>(
+                    glm::vec3(0.0f, 10.0f, 50.0f),
+                    glm::vec3(0.0f, 1.0f, 0.0f),
+                    -90.0f,
+                    0.0f
+                );
+                isSideView = false;
+            }
+            break;
+        }
+
+        case 'k':
+            // Ruota di 90 gradi verso destra
+            reserved->camera->RotateBy(-90.0f);
+            std::cout << "Ruotato di 90 gradi a destra" << std::endl;
+            break;
+        case 'u':
+        {
+            // Variabile statica: mantiene il valore tra una pressione e l'altra
+            static bool isTopView = false;
+
+            if (!isTopView) {
+                // --- ATTIVA VISTA DALL'ALTO ---
+                reserved->camera = std::make_unique<eng::Camera>(
+                    glm::vec3(0.0f, 60.0f, -40.0f), // Sopra la torre
+                    glm::vec3(0.0f, 1.0f, 0.0f),
+                    -90.0f,
+                    -89.0f  // Guarda in giù
+                );
+                std::cout << "Visuale: ALTO" << std::endl;
+                isTopView = true;
+            }
+            else {
+                // --- RESETTA VISTA NORMALE ---
+                // Torna alla posizione definita in initialize()
+                reserved->camera = std::make_unique<eng::Camera>(
+                    glm::vec3(0.0f, 10.0f, 50.0f)
+                    // I parametri di default (Yaw -90, Pitch 0) raddrizzano la visuale
+                );
+                std::cout << "Visuale: NORMALE" << std::endl;
+                isTopView = false;
+            }
+            break;
+        }
+
+
         }
 
 

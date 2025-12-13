@@ -64,6 +64,8 @@ namespace eng {
          */
         glm::mat4 GetViewMatrix();
 
+        void RotateBy(float angle);
+
         /**
          * @brief Elabora l'input da tastiera
          * @param direction Direzione del movimento (enum)
