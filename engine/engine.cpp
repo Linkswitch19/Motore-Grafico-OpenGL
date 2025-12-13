@@ -22,6 +22,7 @@
     #include "mesh.h"      
     #include "material.h"  
     #include "texture.h"   
+    #include "camera.h"
     #include <tuple>       
    
 
@@ -49,6 +50,7 @@ struct Eng::Base::Reserved
    float clearColor[3] = { 0.f, 0.f, 0.f };
    int windowId;
    std::shared_ptr<eng::Node> sceneRoot = nullptr;
+   std::unique_ptr<eng::Camera> camera = nullptr;
    
 
    /**
@@ -186,6 +188,8 @@ void ENG_API Eng::Base::initialize()
     //Setting Light0 parameters
     GLfloat light0_pos[] = { 0.0f, 0.0f, 0.0f, 1.0f }; // A positional light
     glLightfv(GL_LIGHT0, GL_POSITION, light0_pos);
+    this->reserved->camera = std::make_unique<eng::Camera>(glm::vec3(0.0f, 10.0f, 50.0f));
+
 
     // Carica OVO
     reserved->sceneRoot = eng::OVOParser::from_file("torretina.ovo");
@@ -264,6 +268,39 @@ void ENG_API Eng::Base::setKeyboardCallback(KeyboardCallback cb)
 }
 
 void ENG_API Eng::Base::onKeyPressed(unsigned char key, int x, int y) {
+    glutPostRedisplay(); // <--- FORZA L'AGGIORNAMENTO DELLO SCHERMO
+
+
+    // Velocità di movimento (o delta time se lo calcoli)
+    float dt = 1.0f; // Valore arbitrario, se hai un calcolo del deltaTime usalo qui
+
+    // Gestione Camera WASD
+    if (reserved->camera) {
+        // Usa tolower per accettare sia maiuscole che minuscole
+        switch (tolower(key)) {
+        case 'w':
+            reserved->camera->ProcessKeyboard(eng::FORWARD, dt);
+            break;
+        case 's':
+            reserved->camera->ProcessKeyboard(eng::BACKWARD, dt);
+            break;
+        case 'a':
+            reserved->camera->ProcessKeyboard(eng::LEFT, dt);
+            break;
+        case 'd':
+            reserved->camera->ProcessKeyboard(eng::RIGHT, dt);
+            break;
+        case 'q': // Opzionale: Sali
+            reserved->camera->ProcessKeyboard(eng::UP, dt);
+            break;
+        case 'e': // Opzionale: Scendi
+            reserved->camera->ProcessKeyboard(eng::DOWN, dt);
+            break;
+        }
+
+
+    }
+
 
     // Logica di gioco Hanoi
     int poleIndex = -1;
@@ -401,6 +438,12 @@ void ENG_API Eng::Base::onDisplay()
     glLoadMatrixf(glm::value_ptr(perspective));
     glMatrixMode(GL_MODELVIEW);
 
+    // 1. Ottieni la matrice della Camera (View Matrix)
+    glm::mat4 viewMatrix = glm::mat4(1.0f); // Default Identity
+    if (reserved->camera) {
+        viewMatrix = reserved->camera->GetViewMatrix();
+    }
+
    
 
   
@@ -412,17 +455,22 @@ void ENG_API Eng::Base::onDisplay()
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, glm::value_ptr(materialSpecular));
 
 
-    // Reimposta la matrice Identity per posizionare la Torre in coordinate mondo
-    glLoadMatrixf(glm::value_ptr(glm::mat4(1.0f)));
+  
 
 
     // --- NUOVO DISEGNO ---
     if (reserved->sceneRoot) {
-        // Sposta la torre dove vuoi (es. un po' indietro e in basso come l'originale)
+        // 2. Crea la matrice del Modello (Dove sta la torre nel mondo)
+        // La spostiamo a (0, -5, -40)
         glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -5.0f, -40.0f));
 
-        // Chiama la funzione ricorsiva
-        renderOvoNode(reserved->sceneRoot, modelMatrix);
+        // 3. CALCOLO FONDAMENTALE: ModelView = View * Model
+        // Moltiplichiamo la camera per il modello. 
+        // In questo modo passiamo a renderOvoNode una matrice che contiene SIA la posizione della torre SIA la posizione della camera.
+        glm::mat4 modelViewMatrix = viewMatrix * modelMatrix;
+
+        // Chiama la funzione ricorsiva passando la matrice combinata
+        renderOvoNode(reserved->sceneRoot, modelViewMatrix);
     }
 
 
