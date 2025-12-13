@@ -4,7 +4,9 @@
 // VERSION //
 /////////////
 
-
+#define DEBUG(fmt, ...) printf("[DEBUG] " fmt "\n", ##__VA_ARGS__)
+#define WARN(fmt, ...)  printf("[WARN]  " fmt "\n", ##__VA_ARGS__)
+#define ERROR(fmt, ...) printf("[ERROR] " fmt "\n", ##__VA_ARGS__)
 
    // Generic info:
 #ifdef _DEBUG
