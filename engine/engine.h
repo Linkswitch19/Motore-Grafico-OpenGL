@@ -63,6 +63,7 @@ namespace Eng {
 
 		// Operators:
 		void operator=(Base const&) = delete;
+		std::string currentMessage = "";
 
 		// Singleton:
 		static Base& getInstance();
@@ -84,6 +85,8 @@ namespace Eng {
 		void update();
 
 		void setParent(const std::string& childName, const std::string& parentName);
+		void setMessage(const std::string& msg);
+		 
 
 
 

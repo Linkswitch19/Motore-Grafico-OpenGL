@@ -103,23 +103,33 @@ using namespace std;
          if (selectedSourcePole == -1) {
              // --- FASE 1: Selezione Sorgente ---
              if (poles[poleIndex].empty()) {
-                 std::cout << "Palo vuoto! Seleziona un altro." << std::endl;
+                 Eng::Base::getInstance().setMessage("Palo Vuoto!");
              }
              else {
                  selectedSourcePole = poleIndex;
-                 std::cout << "Selezionato palo sorgente: " << (poleIndex + 1) << ". Dove lo sposti?" << std::endl;
-                 // Opzionale: Evidenzia visivamente il disco selezionato (es. alzandolo un po')
+                 
+                 int diskID = poles[poleIndex].back();
+
+                 
+                 std::string msg = "Hai preso il Disco " + std::to_string(diskID) + " (Scegli dove metterlo)";
+                 updateVisuals();
+
+                 
+                 Eng::Base::getInstance().setMessage(msg);
+                 
              }
          }
          else {
              // --- FASE 2: Selezione Destinazione ---
              int source = selectedSourcePole;
              int dest = poleIndex;
+             Eng::Base::getInstance().setMessage(""); 
 
              // Annulla selezione se si preme lo stesso palo
              if (source == dest) {
                  std::cout << "Selezione annullata." << std::endl;
                  selectedSourcePole = -1;
+                 updateVisuals();
                  return;
              }
 
@@ -155,34 +165,40 @@ using namespace std;
      void updateVisuals() {
          auto& engine = Eng::Base::getInstance();
 
-         for (int p = 0; p < 3; p++) {
-             float currentY = 0.0f; // Si parte da 0 relativo alla base del palo
+         const float HOVER_HEIGHT = 20.0f;
 
-             // Per ogni disco su questo palo...
+         for (int p = 0; p < 3; p++) {
+             float currentY = 0.0f; // Altezza base relativa al palo
+
              for (size_t i = 0; i < poles[p].size(); i++) {
                  int diskID = poles[p][i];
                  int diskIndex = diskID - 1;
 
                  std::string diskName = "Disco" + std::to_string(diskID);
-                 std::string targetPoleName = poleNodeNames[p];
 
-                 // 1. CAMBIA IL PADRE (La magia avviene qui)
-                 // L'engine stacca il disco da dove era e lo mette sotto il nuovo palo
-                 engine.setParent(diskName, targetPoleName);
+                 // Usa i nomi dei tuoi pali (Palo1, Palo2, Palo3)
+                 // Assicurati che l'array poleNodeNames sia definito nella classe o usa questa logica:
+                 std::string poleName = "Palo" + std::to_string(p + 1);
 
-                 // 2. AZZERA LE COORDINATE LOCALI
-                 // Ora che è figlio del palo, (0,0,0) significa "centrato sul palo"
+                 // 1. Attacca al padre corretto
+                 engine.setParent(diskName, poleName);
+
+                 // 2. Calcola la posizione Y
+                 float drawY = currentY;
+
+                 // Se questo è il palo selezionato E questo è il disco in cima (l'ultimo)
+                 if (p == selectedSourcePole && i == poles[p].size() - 1) {
+                     drawY = HOVER_HEIGHT; 
+                 }
+                 // -------------------------------------------------
+
                  if (diskNodes[diskIndex]) {
                      glm::mat4 localMat = glm::mat4(1.0f);
-
-                     // Modifica solo l'altezza (Y)
-                     // X e Z restano 0.0f, così sono perfettamente centrati sul padre!
-                     localMat = glm::translate(localMat, glm::vec3(0.0f, currentY, 0.0f));
-
+                     localMat = glm::translate(localMat, glm::vec3(0.0f, drawY, 0.0f));
                      diskNodes[diskIndex]->set_base_matrix(localMat);
                  }
 
-                 currentY += DISK_HEIGHT; // Sali per il prossimo
+                 currentY += DISK_HEIGHT; // Incrementa per il prossimo disco nella pila
              }
          }
      }

@@ -469,6 +469,13 @@ void ENG_API Eng::Base::onDisplay()
     if (reserved->camera) {
         viewMatrix = reserved->camera->GetViewMatrix();
     }
+    if (!currentMessage.empty()) {
+    glColor3f(1.0f, 1.0f, 0.0f); // Giallo
+    glRasterPos2f(window_width / 2.0f - 50.0f, window_height - 50.0f); // Posizione (Centrato in alto)
+    
+    // Disegna la stringa
+    glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)currentMessage.c_str());
+}
 
    
 
@@ -538,6 +545,14 @@ void ENG_API Eng::Base::onDisplay()
 
     // Swap this context's buffer:
     frames++;
+    if (!currentMessage.empty()) {
+        glColor3f(1.0f, 1.0f, 0.0f); // Giallo
+        glRasterPos2f(window_width / 2.0f - 50.0f, window_height - 50.0f); // Posizione (Centrato in alto)
+
+        // Disegna la stringa
+        glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)currentMessage.c_str());
+    }
+
     glutSwapBuffers();
 
     // Force rendering refresh:
@@ -640,6 +655,10 @@ void ENG_API Eng::Base::reshapeCallback(int width, int height)
     // Refresh projection matrices:
     perspective = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 1.0f, 100.0f);
     ortho = glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f);
+}
+
+void ENG_API Eng::Base::setMessage(const std::string& msg) {
+    this->currentMessage = msg;
 }
 
 
