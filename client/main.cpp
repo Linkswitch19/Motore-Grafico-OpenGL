@@ -34,7 +34,7 @@ using namespace std;
 
 // Configurazione posizioni dei pali nel mondo 3D (da aggiustare in base al modello)
  float POLE_X_POSITIONS[3] = { -20.0f, 0.0f, 20.0f }; // Palo 1, 2, 3
- float DISK_HEIGHT = 1.0f;     // Altezza di uno step (spessore disco)
+ float DISK_HEIGHT = 0.5f;     // Altezza di uno step (spessore disco)
  float BASE_HEIGHT = 0.0f;     // Altezza base da terra
 
 
