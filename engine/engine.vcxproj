@@ -56,8 +56,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>..\dependencies\freeglut\lib\$(Platform)\$(Configuration);..\dependencies\freeimage\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>freeglut_staticd.lib;%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\dependencies\freeglut\lib\$(Platform)\$(Configuration);..\dependencies\freeimage\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freeglut_staticd.lib;%(AdditionalDependencies);FreeImage.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -77,8 +77,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>..\dependencies\freeglut\lib\$(Platform)\$(Configuration);..\dependencies\freeimage\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>freeglut_staticd.lib;%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\dependencies\freeglut\lib\$(Platform)\$(Configuration);..\dependencies\freeimage\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freeglut_staticd.lib;%(AdditionalDependencies);FreeImage.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
