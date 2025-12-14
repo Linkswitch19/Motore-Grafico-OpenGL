@@ -295,6 +295,33 @@ void ENG_API Eng::Base::initialize()
     reserved->sceneRoot = eng::OVOParser::from_file("torretina.ovo");
     if (!reserved->sceneRoot) std::cout << "Errore caricamento OVO" << std::endl;
 
+
+    // 1. Carica la texture (FreeImage gestirà .dds, .png, .jpg, ecc.)
+    // Assicurati che il file sia nella cartella dell'eseguibile!
+    auto myTexture = std::make_shared<eng::Texture>("Wood094_1K-PNG_Color.dds");
+
+    // 2. Applica la texture alla mesh.
+    // Metodo A: Se sai che 'sceneRoot' è direttamente la Mesh:
+    auto meshPtr = std::dynamic_pointer_cast<eng::Mesh>(reserved->sceneRoot);
+    if (meshPtr) {
+        if (!meshPtr->get_material()) meshPtr->set_material(std::make_shared<eng::Material>());
+        meshPtr->get_material()->set_texture(myTexture);
+        std::cout << "Texture applicata alla radice!" << std::endl;
+    }
+    // Metodo B: Se la mesh è figlia della radice (probabile con i file OVO complessi)
+    else {
+        for (auto& child : reserved->sceneRoot->get_children()) {
+            auto childMesh = std::dynamic_pointer_cast<eng::Mesh>(child);
+            if (childMesh) {
+                if (!childMesh->get_material()) childMesh->set_material(std::make_shared<eng::Material>());
+                childMesh->get_material()->set_texture(myTexture);
+                std::cout << "Texture applicata al figlio: " << child->get_name() << std::endl;
+                // Togli il break se vuoi texturizzare tutti i figli
+                // break; 
+            }
+        }
+    }
+
     glEnable(GL_LIGHTING);			  //Enabling Lighting
     glEnable(GL_LIGHT0);		      //Enabling Light0	
 
@@ -334,6 +361,8 @@ bool ENG_API Eng::Base::free()
       std::cout << "ERROR: engine not initialized" << std::endl;
       return false;
    }
+
+   FreeImage_DeInitialise();
 
    // Here you can properly dispose of any allocated resource (including third-party dependencies)...
 
@@ -493,9 +522,9 @@ void renderOvoNode(std::shared_ptr<eng::Node> node, glm::mat4 parentMatrix) {
             // Gestione Texture
             if (mat->get_texture()) {
                 glEnable(GL_TEXTURE_2D);
-                // IMPORTANTE: Assicurati che la tua classe Texture abbia un metodo per ottenere l'ID
-                // Se la texture non si vede, potrebbe mancare il bind qui, es:
-                // glBindTexture(GL_TEXTURE_2D, mat->get_texture()->get_texture_id()); 
+               
+                glBindTexture(GL_TEXTURE_2D, mat->get_texture()->get_texture_id()); 
+                glColor3f(1.0f, 1.0f, 1.0f);
             }
             else {
                 glDisable(GL_TEXTURE_2D);
@@ -586,7 +615,7 @@ void ENG_API Eng::Base::onDisplay()
     // 3. DISEGNO SFERE FLUO E POSIZIONAMENTO LUCI
     // -----------------------------------------------------------
     // Ora che la telecamera è settata, possiamo disegnare le sfere nella posizione giusta
-
+    glDisable(GL_TEXTURE_2D);
     if (!reserved->orbsList.empty()) {
 
         // Colore FLUO della sfera (visivo)
@@ -665,6 +694,7 @@ void ENG_API Eng::Base::onDisplay()
 
     // Disable lighting before rendering 2D text:
     glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
 
     // Colore del testo (Bianco)
     glColor3f(1.0f, 1.0f, 1.0f);
