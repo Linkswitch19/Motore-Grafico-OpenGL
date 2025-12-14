@@ -557,17 +557,17 @@ void ENG_API Eng::Base::update()
 {
     glutMainLoopEvent();
 }
-
+// per scegliere il palo giusto
 std::shared_ptr<eng::Node> findParentOf(std::shared_ptr<eng::Node> current, const std::string& childName) {
     if (!current) return nullptr;
 
     for (auto& child : current->get_children()) {
-        // Se questo child è quello che cerchiamo, allora 'current' è il padre!
+        
         if (child->get_name() == childName) {
             return current;
         }
 
-        // Altrimenti cerca nei nipoti (ricorsione)
+       
         auto result = findParentOf(child, childName);
         if (result) return result;
     }
@@ -647,7 +647,7 @@ void ENG_API Eng::Base::reshapeCallback(int width, int height)
     glViewport(0, 0, width, height);
 
     // Refresh projection matrices:
-    perspective = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 1.0f, 500.0f);
+    perspective = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 1.0f, 500.0f); //quanto si puo vedere
     ortho = glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f);
 }
 
