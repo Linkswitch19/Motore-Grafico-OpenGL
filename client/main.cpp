@@ -18,9 +18,6 @@
  #include <iostream>
  #include <vector>
 
-
-#include <Windows.h>                              // Header File For Windows
-
 #include <math.h>
 #include "node.h"
 #include "textHUD.h"

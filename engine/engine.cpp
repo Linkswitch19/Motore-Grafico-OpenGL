@@ -36,54 +36,7 @@
        #include <iostream>   
        #include <source_location>
      
-void drawShinyOrb(float rotationAngle) {
 
-    // 1. Impostazione del Materiale Lucente e FLUORESCENTE
-
-    // Componente AMBIENT e DIFFUSE (Possono essere spenti o molto scuri se l'emissione domina)
-    GLfloat ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f }; // Molto scuro
-    GLfloat diffuse[] = { 0.1f, 0.1f, 0.1f, 1.0f }; // Quasi spento
-
-    // Componente SPECULAR e SHININESS (Per avere riflessi se c'è luce, ma la sfera emette luce)
-    GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    GLfloat shininess = 100.0f;
-
-    // !!! NUOVO: Componente EMISSIONE (Il colore che la sfera emette da sé)
-    // Scegli un colore vivido (es. Verde acido)
-    GLfloat emission[] = { 0.0f, 1.0f, 0.0f, 1.0f }; // Verde acido brillante 
-    // Per un effetto più "fluo", puoi anche usare { 0.5f, 1.0f, 0.0f, 1.0f }
-
-    // Applica le proprietà del materiale
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
-
-    // !!! APPLICA L'EMISSIONE !!!
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, emission); // <--- QUESTA È LA CHIAVE
-
-    // 2. Applicazione della Trasformazione (Rotazione e Posizione)
-    glPushMatrix();
-
-    // Posiziona l'oggetto nello spazio (0, 5, -30)
-    glTranslatef(0.0f, 5.0f, -30.0f);
-
-    // Applica la rotazione corrente
-    glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
-
-    // 3. Disegna la primitiva (Sfera)
-    glutSolidSphere(2.0, 32, 32);
-
-    glPopMatrix();
-
-    // !!! IMPORTANTE: RESETTA L'EMISSIONE !!!
-    // Se non resettiamo l'emissione a zero dopo aver disegnato l'oggetto fluo, 
-    // TUTTI gli oggetti successivi (inclusa la tua torre OVO) saranno disegnati 
-    // con lo stesso colore emissivo, rovinando l'illuminazione del resto della scena.
-    GLfloat zero_emission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, zero_emission); // <--- RESETTA
-
-}
 
 
 /////////////////////////
@@ -178,12 +131,12 @@ void ENG_API Eng::Base::createOrb(float x, float y, float z)
     int lightID = GL_LIGHT0 + reserved->orbsList.size();
 
     // Configura la luce ROSSA
-    GLfloat redColor[] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Colore Luce
+    GLfloat Color[] = { 0.0f, 1.0f, 0.0f, 1.0f }; // Colore Luce
     GLfloat ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f }; // Nessuna luce ambientale diffusa
 
     glEnable(lightID); // Accendi l'interruttore
-    glLightfv(lightID, GL_DIFFUSE, redColor);  // Luce che illumina gli oggetti opachi
-    glLightfv(lightID, GL_SPECULAR, redColor); // Luce che fa i riflessi lucidi
+    glLightfv(lightID, GL_DIFFUSE, Color);  // Luce che illumina gli oggetti opachi
+    glLightfv(lightID, GL_SPECULAR, Color); // Luce che fa i riflessi lucidi
     glLightfv(lightID, GL_AMBIENT, ambient);
 
     // Imposta attenuazione (la luce diminuisce con la distanza)
@@ -491,11 +444,11 @@ void Eng::Base::renderOrbs() {
 
     if (reserved->orbsList.empty()) return;
 
-    GLfloat neonRed[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+    GLfloat neon[] = { 0.0f, 1.0f, 0.0f, 1.0f };
     GLfloat black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     // Attiva emissione
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, neonRed);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, neon);
 
     for (int i = 0; i < reserved->orbsList.size(); i++) {
         int lightID = GL_LIGHT0 + (i + 1);
