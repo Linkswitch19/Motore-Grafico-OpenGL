@@ -152,6 +152,11 @@ namespace Eng {
 		std::vector<int> poles[3]; // 3 vettori che rappresentano i 3 pali
 		int heldDisk = -1;         // -1 = mano vuota, altrimenti contiene l'ID del disco (grandezza)
 
+		void setupCamera();
+		void renderOrbs();
+		void renderScene();
+		void renderHUD();
+
    
 	   size_t prev_time = 0;
 	   KeyboardCallback keyboardCallback = nullptr;

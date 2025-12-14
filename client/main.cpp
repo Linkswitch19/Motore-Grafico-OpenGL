@@ -135,7 +135,78 @@ using namespace std;
              }
          }
      }
+
+     void handleInput(unsigned char key) {
+         int poleIndex = -1;
+         if (key == '1') poleIndex = 0;
+         else if (key == '2') poleIndex = 1;
+         else if (key == '3') poleIndex = 2;
+         else return; // Tasto non valido per il gioco
+
+         if (selectedSourcePole == -1) {
+             // --- FASE 1: Selezione Sorgente ---
+             if (poles[poleIndex].empty()) {
+                 Eng::Base::getInstance().setMessage("Palo Vuoto!");
+             }
+             else {
+                 selectedSourcePole = poleIndex;
+
+                 int diskID = poles[poleIndex].back();
+
+
+                 std::string msg = "Hai preso il Disco " + std::to_string(diskID) + " (Scegli dove metterlo)";
+                 updateVisuals();
+
+
+                 Eng::Base::getInstance().setMessage(msg);
+
+             }
+         }
+         else {
+             // --- FASE 2: Selezione Destinazione ---
+             int source = selectedSourcePole;
+             int dest = poleIndex;
+             Eng::Base::getInstance().setMessage("");
+
+             // Annulla selezione se si preme lo stesso palo
+             if (source == dest) {
+                 std::cout << "Selezione annullata." << std::endl;
+                 selectedSourcePole = -1;
+                 updateVisuals();
+                 return;
+             }
+
+             // Logica Hanoi: Verifica validità mossa
+             int diskToMove = poles[source].back(); // Il disco in cima al palo sorgente
+
+             bool validMove = true;
+             if (!poles[dest].empty()) {
+
+                 int topDiskDest = poles[dest].back();
+                 if (diskToMove < topDiskDest) { // <--- CAMBIATO DA > A <
+                     validMove = false;
+                     std::cout << "MOSSA INVALIDA: Non puoi mettere un disco GRANDE (ID "
+                         << diskToMove << ") su uno PICCOLO (ID " << topDiskDest << ")!" << std::endl;
+                 }
+
+
+             }
+
+             if (validMove) {
+                 // Esegui sposta logico
+                 poles[source].pop_back();
+                 poles[dest].push_back(diskToMove);
+                 std::cout << "Disco spostato da " << (source + 1) << " a " << (dest + 1) << std::endl;
+             }
+
+             // Resetta selezione
+             selectedSourcePole = -1;
+             updateVisuals();
+         }
+     }
+
  };
+
 
 
 
@@ -145,6 +216,7 @@ HanoiGame game;
 void keyboardCallback(unsigned char key, int x, int y) {
     // Ottieni l'istanza dell'engine
     Eng::Base& eng = Eng::Base::getInstance();
+    game.handleInput(key);
 
     float dt = 1.0f; // Delta time fittizio
 

@@ -443,129 +443,125 @@ void renderOvoNode(std::shared_ptr<eng::Node> node, glm::mat4 parentMatrix) {
 
 void ENG_API Eng::Base::onDisplay()
 {
-    // -----------------------------------------------------------
-    // 1. PULIZIA E CALCOLI PRELIMINARI
-    // -----------------------------------------------------------
-
-    // Clear the screen:
+    // 1. Pulizia Schermo
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Calcolo Delta Time e aggiornamento animazione
+    // 2. Calcolo Delta Time
     static int prev_t = glutGet(GLUT_ELAPSED_TIME);
     int curr_t = glutGet(GLUT_ELAPSED_TIME);
     float dt = (curr_t - prev_t) / 1000.0f;
     prev_t = curr_t;
 
-    updateAnimation(dt); // Aggiorna l'angolo di rotazione
+    updateAnimation(dt);
+
+    // 3. Fase 3D
+    setupCamera();  // Imposta Proiezione e Vista
+    renderOrbs();   // Disegna le luci/sfere
+    renderScene();  // Disegna il livello (OVO)
+
+    // 4. Fase 2D
+    renderHUD();    // Disegna testi e interfaccia
+
+    // 5. Chiusura Frame
+    frames++;
+    glutSwapBuffers();
+    glutPostWindowRedisplay(this->reserved->windowId);
+}
 
 
-    // -----------------------------------------------------------
-    // 2. SETUP DELLA TELECAMERA (VIEW MATRIX)
-    // -----------------------------------------------------------
-    // È fondamentale farlo PRIMA di disegnare qualsiasi oggetto 3D
 
-    // Set perspective matrix:
+void Eng::Base::setupCamera() {
+    // Set perspective matrix
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(glm::value_ptr(perspective));
 
-    // Set ModelView mode
+    // Set ModelView matrix
     glMatrixMode(GL_MODELVIEW);
 
-    // Ottieni e carica la matrice della Camera
-    glm::mat4 viewMatrix = glm::mat4(1.0f); // Default Identity
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
     if (reserved->camera) {
         viewMatrix = reserved->camera->GetViewMatrix();
     }
-    glLoadMatrixf(glm::value_ptr(viewMatrix)); // <--- LA TELECAMERA È ORA ATTIVA
+    glLoadMatrixf(glm::value_ptr(viewMatrix));
+}
 
-
-    // -----------------------------------------------------------
-    // 3. DISEGNO SFERE FLUO E POSIZIONAMENTO LUCI
-    // -----------------------------------------------------------
-    // Ora che la telecamera è settata, possiamo disegnare le sfere nella posizione giusta
+void Eng::Base::renderOrbs() {
+    // Importante: Spegni le texture per gli oggetti "puri" come le luci
     glDisable(GL_TEXTURE_2D);
-    if (!reserved->orbsList.empty()) {
 
-        // Colore FLUO della sfera (visivo)
-        GLfloat neonRed[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-        GLfloat black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    if (reserved->orbsList.empty()) return;
 
-        // Attiva effetto NEON (Emissione)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, neonRed);
+    GLfloat neonRed[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+    GLfloat black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        for (int i = 0; i < reserved->orbsList.size(); i++) {
-            int lightID = GL_LIGHT0 + (i + 1);
-            glm::vec3 pos = reserved->orbsList[i];
+    // Attiva emissione
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, neonRed);
 
-            // --- CALCOLO OSCILLAZIONE (BOBBING) ---
-            // sin(tempo * velocità) * ampiezza
-            // Velocità 2.0f = oscilla abbastanza veloce
-            // Ampiezza 3.0f = sale e scende di 3 unità
-            float verticalOffset = sin(reserved->totalTime * 2.0f) * 3.0f;
+    for (int i = 0; i < reserved->orbsList.size(); i++) {
+        int lightID = GL_LIGHT0 + (i + 1);
+        glm::vec3 pos = reserved->orbsList[i];
 
-            glPushMatrix();
+        // Bobbing animation
+        float verticalOffset = sin(reserved->totalTime * 2.0f) * 3.0f;
 
-            // --- Spostamento ---
-            // Aggiungiamo verticalOffset alla posizione Y originale
-            glTranslatef(pos.x, pos.y + verticalOffset, pos.z);
+        glPushMatrix();
+        glTranslatef(pos.x, pos.y + verticalOffset, pos.z);
+        glRotatef(reserved->rotationAngleY, 0.0f, 1.0f, 0.0f);
 
-            // --- Rotazione ---
-            glRotatef(reserved->rotationAngleY, 0.0f, 1.0f, 0.0f);
+        // Posiziona la luce fisica
+        GLfloat lightPos[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        glLightfv(lightID, GL_POSITION, lightPos);
 
-            // --- Posizionamento Luce Reale ---
-            // La luce segue la sfera (perché abbiamo traslato prima)
-            GLfloat lightPos[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            glLightfv(lightID, GL_POSITION, lightPos);
-
-            // --- Disegno Sfera Fisica ---
-            glutSolidSphere(2.0, 32, 32);
-
-            glPopMatrix();
-        }
-
-        // Spegni effetto NEON (Reset obbligatorio per non rovinare la torre)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
+        // Disegna la sfera
+        glutSolidSphere(2.0, 32, 32);
+        glPopMatrix();
     }
 
+    // Resetta emissione
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
+}
 
-    // -----------------------------------------------------------
-    // 4. DISEGNO SCENA PRINCIPALE (OVO)
-    // -----------------------------------------------------------
+void Eng::Base::renderScene() {
+    // Riabilita il lighting (nel caso fosse stato spento)
+    glEnable(GL_LIGHTING);
 
-    // Set material properties (Valori di default per la scena)
+    // Proprietà materiale di default
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, materialShininess);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, glm::value_ptr(materialAmbient));
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, glm::value_ptr(materialDiffuse));
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, glm::value_ptr(materialSpecular));
 
     if (reserved->sceneRoot) {
-        // Crea la matrice del Modello (Dove sta la torre nel mondo)
+        // Matrice di posizione del mondo
+        // Se hai la matrice View già caricata in setupCamera(), qui serve solo la Model
         glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -5.0f, -40.0f));
 
-        // ModelView = View * Model
+        // OpenGL Fixed Pipeline lavora moltiplicando la matrice corrente.
+        // Poiché in setupCamera abbiamo caricato la VIEW, qui carichiamo la MODEL.
+        // Per renderOvoNode che usa glLoadMatrix, dobbiamo passargli View * Model.
+
+        // Recuperiamo la View Matrix corrente (salvata nel camera)
+        glm::mat4 viewMatrix = glm::mat4(1.0f);
+        if (reserved->camera) viewMatrix = reserved->camera->GetViewMatrix();
+
         glm::mat4 modelViewMatrix = viewMatrix * modelMatrix;
 
-        // Chiama la funzione ricorsiva
         renderOvoNode(reserved->sceneRoot, modelViewMatrix);
     }
+}
 
-
-    // -----------------------------------------------------------
-    // 5. INTERFACCIA 2D (HUD, TESTI, FPS)
-    // -----------------------------------------------------------
-
-    // Set orthographic projection:
+void Eng::Base::renderHUD() {
+    // Setup 2D
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(glm::value_ptr(ortho));
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(glm::value_ptr(glm::mat4(1.0f)));
 
-    // Disable lighting before rendering 2D text:
+    // Disabilita effetti 3D
     glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D); // FONDAMENTALE
 
-    // Colore del testo (Bianco)
-    glColor3f(1.0f, 1.0f, 1.0f);
+    glColor3f(1.0f, 1.0f, 1.0f); // Bianco
 
     char buffer[128];
     float w = (float)glutGet(GLUT_WINDOW_WIDTH);
@@ -574,43 +570,34 @@ void ENG_API Eng::Base::onDisplay()
     float textY = h - 50.0f;
     float stepY = 15.0f;
 
-    // Stampa FPS
+    // FPS
     sprintf_s(buffer, sizeof(buffer), "FPS: %d", fps);
     glRasterPos2f(textX, textY);
     glutBitmapString(GLUT_BITMAP_8_BY_13, (unsigned char*)buffer);
 
-    // Stampa LOD
+    // LOD
     textY += stepY;
     snprintf(buffer, sizeof(buffer), "LOD: %d", detail);
     glRasterPos2f(textX, textY);
     glutBitmapString(GLUT_BITMAP_8_BY_13, (unsigned char*)buffer);
 
-    // Lista Comandi HUD
+    // Lista HUD personalizzata
     for (auto& textItem : hudList) {
         textItem.render();
     }
 
-    // Messaggio centrale (Giallo)
+    // Messaggio centrale
     if (!currentMessage.empty()) {
         glColor3f(1.0f, 1.0f, 0.0f); // Giallo
-        glRasterPos2f(window_width / 2.0f - 50.0f, window_height - 50.0f);
+        glRasterPos2f(w / 2.0f - 50.0f, h - 50.0f);
         glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)currentMessage.c_str());
     }
 
-    // -----------------------------------------------------------
-    // 6. CHIUSURA FRAME
-    // -----------------------------------------------------------
-
-    // Reactivate lighting for next frame
+    // Ripristina stato per il prossimo frame 3D
     glEnable(GL_LIGHTING);
-
-    // Swap buffers
-    frames++;
-    glutSwapBuffers();
-
-    // Force rendering refresh
-    glutPostWindowRedisplay(this->reserved->windowId);
 }
+
+
 
 void ENG_API Eng::Base::update()
 {
