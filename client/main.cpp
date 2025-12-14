@@ -250,6 +250,11 @@ int main(int argc, char *argv[])
    eng.setKeyboardCallback(keyboardCallback);
    
    eng.init("My OpenGL window", 640, 480,argc,argv);
+   eng.loadTexture("Wood094_1K-PNG_Color.dds", "Base");
+   eng.loadTexture("Wood094_1K-PNG_Color.dds", "Palo1");
+   eng.loadTexture("Wood094_1K-PNG_Color.dds", "Palo2");
+   eng.loadTexture("Wood094_1K-PNG_Color.dds", "Palo3");
+
    eng.createOrb(0.0f, 5.0f, -47.0f);
    eng.createOrb(0.0f, 5.0f, -65.0f);
    

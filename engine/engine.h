@@ -93,6 +93,7 @@ namespace Eng {
 		void setMessage(const std::string& msg);
 		void addText(const eng::TextHUD& textObject);
 		void clearHUD();
+		void loadTexture(const std::string& textureFile, const std::string& objectName);
 		 
 
 

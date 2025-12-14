@@ -279,59 +279,25 @@ void ENG_API Eng::Base::startLoop() {
 }
 
 void ENG_API Eng::Base::initialize()
-
 {
-    glClearColor(0.1, 0.1, 0.1, 5.0); //Background Color
-    glShadeModel(GL_SMOOTH);		  //SMOOTH Shading
-    glEnable(GL_DEPTH_TEST);		  //Enabling Depth Test
+    glClearColor(0.1, 0.1, 0.1, 5.0);
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
 
-    //Setting Light0 parameters
-    GLfloat light0_pos[] = { 0.0f, 0.0f, 0.0f, 1.0f }; // A positional light
+    GLfloat light0_pos[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, light0_pos);
     this->reserved->camera = std::make_unique<eng::Camera>(glm::vec3(0.0f, 10.0f, 50.0f));
-
 
     // Carica OVO
     reserved->sceneRoot = eng::OVOParser::from_file("torretina.ovo");
     if (!reserved->sceneRoot) std::cout << "Errore caricamento OVO" << std::endl;
 
+    // --- NOTA: Ho tolto tutto il codice della texture da qui! ---
 
-    // 1. Carica la texture (FreeImage gestirà .dds, .png, .jpg, ecc.)
-    // Assicurati che il file sia nella cartella dell'eseguibile!
-    auto myTexture = std::make_shared<eng::Texture>("Wood094_1K-PNG_Color.dds");
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
 
-    // 2. Applica la texture alla mesh.
-    // Metodo A: Se sai che 'sceneRoot' è direttamente la Mesh:
-    auto meshPtr = std::dynamic_pointer_cast<eng::Mesh>(reserved->sceneRoot);
-    if (meshPtr) {
-        if (!meshPtr->get_material()) meshPtr->set_material(std::make_shared<eng::Material>());
-        meshPtr->get_material()->set_texture(myTexture);
-        std::cout << "Texture applicata alla radice!" << std::endl;
-    }
-    // Metodo B: Se la mesh è figlia della radice (probabile con i file OVO complessi)
-    else {
-        for (auto& child : reserved->sceneRoot->get_children()) {
-            auto childMesh = std::dynamic_pointer_cast<eng::Mesh>(child);
-            if (childMesh) {
-                if (!childMesh->get_material()) childMesh->set_material(std::make_shared<eng::Material>());
-                childMesh->get_material()->set_texture(myTexture);
-                std::cout << "Texture applicata al figlio: " << child->get_name() << std::endl;
-                // Togli il break se vuoi texturizzare tutti i figli
-                // break; 
-            }
-        }
-    }
-
-    glEnable(GL_LIGHTING);			  //Enabling Lighting
-    glEnable(GL_LIGHT0);		      //Enabling Light0	
-
-
-
-    //Globals initializations
     prev_time = glutGet(GLUT_ELAPSED_TIME);
-
-
-   
 }
 
 
@@ -854,6 +820,39 @@ void ENG_API Eng::Base::addText(const eng::TextHUD& textObject)
 void ENG_API Eng::Base::clearHUD()
 {
     this->hudList.clear();
+}
+
+void ENG_API Eng::Base::loadTexture(const std::string& textureFile, const std::string& objectName)
+{
+    // 1. Cerca l'oggetto nella scena per nome
+    auto node = getNode(objectName);
+
+    if (!node) {
+        std::cout << "[ERRORE] Nodo non trovato: " << objectName << std::endl;
+        return;
+    }
+
+    // 2. Controlla che sia una Mesh (solo le mesh hanno materiali)
+    auto mesh = std::dynamic_pointer_cast<eng::Mesh>(node);
+    if (!mesh) {
+        std::cout << "[ERRORE] L'oggetto '" << objectName << "' non e' una Mesh (forse e' un gruppo/nodo vuoto?)" << std::endl;
+        return;
+    }
+
+    // 3. Carica la Texture
+    auto newTexture = std::make_shared<eng::Texture>(textureFile);
+
+    // 4. Assegna il materiale
+    if (!mesh->get_material()) {
+        mesh->set_material(std::make_shared<eng::Material>());
+    }
+
+    mesh->get_material()->set_texture(newTexture);
+
+    // Imposta il colore a bianco per far vedere bene la texture
+    mesh->get_material()->set_diffuse_color(glm::vec3(1.0f, 1.0f, 1.0f));
+
+    std::cout << "[OK] Texture " << textureFile << " applicata a: " << objectName << std::endl;
 }
 
 
