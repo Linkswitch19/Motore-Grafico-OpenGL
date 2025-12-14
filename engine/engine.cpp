@@ -18,6 +18,8 @@
     #include <glm/gtc/type_ptr.hpp>
     #include<glm/gtc/matrix_transform.hpp>
     #include <GL/freeglut.h>
+    
+    #include <FreeImage.h>
     #include "ovo_parser.h"
     #include "mesh.h"      
     #include "material.h"  

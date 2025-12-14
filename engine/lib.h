@@ -3,6 +3,7 @@
 /////////////
 // VERSION //
 /////////////
+#define FREEIMAGE_LIB 
 
 #define DEBUG(fmt, ...) printf("[DEBUG] " fmt "\n", ##__VA_ARGS__)
 #define WARN(fmt, ...)  printf("[WARN]  " fmt "\n", ##__VA_ARGS__)
