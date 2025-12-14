@@ -647,7 +647,7 @@ void ENG_API Eng::Base::reshapeCallback(int width, int height)
     glViewport(0, 0, width, height);
 
     // Refresh projection matrices:
-    perspective = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 1.0f, 100.0f);
+    perspective = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 1.0f, 500.0f);
     ortho = glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f);
 }
 
