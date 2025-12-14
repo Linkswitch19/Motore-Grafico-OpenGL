@@ -99,6 +99,7 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="directional_light.h" />
     <ClInclude Include="engine.h" />
+    <ClInclude Include="enums.h" />
     <ClInclude Include="lib.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="material.h" />

@@ -36,6 +36,8 @@
 
 namespace Eng {
 
+	
+
 
 
 //////////////
@@ -94,6 +96,11 @@ namespace Eng {
 		void addText(const eng::TextHUD& textObject);
 		void clearHUD();
 		void loadTexture(const std::string& textureFile, const std::string& objectName);
+
+
+		void moveCamera(eng::Camera_Movement direction, float deltaTime);
+		void rotateCamera(float angle);
+		void setCameraPosition(const glm::vec3& position, const glm::vec3& up, float yaw, float pitch);
 		 
 
 

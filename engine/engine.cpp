@@ -18,7 +18,7 @@
     #include <glm/gtc/type_ptr.hpp>
     #include<glm/gtc/matrix_transform.hpp>
     #include <GL/freeglut.h>
-    
+    #define FREEIMAGE_LIB 
     #include <FreeImage.h>
     #include "ovo_parser.h"
     #include "mesh.h"      
@@ -350,113 +350,15 @@ void ENG_API Eng::Base::setKeyboardCallback(KeyboardCallback cb)
 }
 
 void ENG_API Eng::Base::onKeyPressed(unsigned char key, int x, int y) {
-    glutPostRedisplay(); // <--- FORZA L'AGGIORNAMENTO DELLO SCHERMO
+  // 1. Forza aggiornamento grafico
+    glutPostRedisplay(); 
 
-
-    // Velocità di movimento (o delta time se lo calcoli)
-    float dt = 1.0f; // Valore arbitrario, se hai un calcolo del deltaTime usalo qui
-
-    // Gestione Camera WASD
-    if (reserved->camera) {
-        // Usa tolower per accettare sia maiuscole che minuscole
-        switch (tolower(key)) {
-        case 'w':
-            reserved->camera->ProcessKeyboard(eng::FORWARD, dt);
-            break;
-        case 's':
-            reserved->camera->ProcessKeyboard(eng::BACKWARD, dt);
-            break;
-        case 'a':
-            reserved->camera->ProcessKeyboard(eng::LEFT, dt);
-            break;
-        case 'd':
-            reserved->camera->ProcessKeyboard(eng::RIGHT, dt);
-            break;
-        case 'q': // Opzionale: Sali
-            reserved->camera->ProcessKeyboard(eng::UP, dt);
-            break;
-        case 'e': // Opzionale: Scendi
-            reserved->camera->ProcessKeyboard(eng::DOWN, dt);
-            break;
-
-
-        case 'j':
-        {
-            // Invece di ruotare solo la testa, ci spostiamo DI LATO alla torre
-            // La torre è a Z = -40. 
-            // Posizione Nuova: X = 50, Z = -40 (Di lato alla torre)
-            // Yaw = -180 (Guarda verso sinistra, verso la torre)
-
-            static bool isSideView = false;
-
-            if (!isSideView) {
-                // Vai di lato
-                reserved->camera = std::make_unique<eng::Camera>(
-                    glm::vec3(60.0f, 10.0f, -40.0f), // Posizionati a destra della torre
-                    glm::vec3(0.0f, 1.0f, 0.0f),
-                    -180.0f, // Guarda verso sinistra (dove sta la torre)
-                    0.0f
-                );
-                isSideView = true;
-            }
-            else {
-                // Torna frontale
-                reserved->camera = std::make_unique<eng::Camera>(
-                    glm::vec3(0.0f, 10.0f, 50.0f),
-                    glm::vec3(0.0f, 1.0f, 0.0f),
-                    -90.0f,
-                    0.0f
-                );
-                isSideView = false;
-            }
-            break;
-        }
-
-        case 'k':
-            // Ruota di 90 gradi verso destra
-            reserved->camera->RotateBy(-90.0f);
-            std::cout << "Ruotato di 90 gradi a destra" << std::endl;
-            break;
-        case 'u':
-        {
-            // Variabile statica: mantiene il valore tra una pressione e l'altra
-            static bool isTopView = false;
-
-            if (!isTopView) {
-                // --- ATTIVA VISTA DALL'ALTO ---
-                reserved->camera = std::make_unique<eng::Camera>(
-                    glm::vec3(0.0f, 60.0f, -40.0f), // Sopra la torre
-                    glm::vec3(0.0f, 1.0f, 0.0f),
-                    -90.0f,
-                    -89.0f  // Guarda in giù
-                );
-                std::cout << "Visuale: ALTO" << std::endl;
-                isTopView = true;
-            }
-            else {
-                // --- RESETTA VISTA NORMALE ---
-                // Torna alla posizione definita in initialize()
-                reserved->camera = std::make_unique<eng::Camera>(
-                    glm::vec3(0.0f, 10.0f, 50.0f)
-                    // I parametri di default (Yaw -90, Pitch 0) raddrizzano la visuale
-                );
-                std::cout << "Visuale: NORMALE" << std::endl;
-                isTopView = false;
-            }
-            break;
-        }
-
-
-        }
-
-
+    // 2. Se l'utente (il main) ha definito una funzione per i tasti, chiamala!
+    if (keyboardCallback) {
+        keyboardCallback(key, x, y);
     }
 
-
    
-
-
-    if (keyboardCallback) keyboardCallback(key, x, y);
 }
 
 
@@ -853,6 +755,24 @@ void ENG_API Eng::Base::loadTexture(const std::string& textureFile, const std::s
     mesh->get_material()->set_diffuse_color(glm::vec3(1.0f, 1.0f, 1.0f));
 
     std::cout << "[OK] Texture " << textureFile << " applicata a: " << objectName << std::endl;
+}
+
+
+void ENG_API Eng::Base::moveCamera(eng::Camera_Movement direction, float deltaTime) {
+    if (reserved->camera) {
+        reserved->camera->ProcessKeyboard(direction, deltaTime);
+    }
+}
+
+void ENG_API Eng::Base::rotateCamera(float angle) {
+    if (reserved->camera) {
+        reserved->camera->RotateBy(angle);
+    }
+}
+
+void ENG_API Eng::Base::setCameraPosition(const glm::vec3& position, const glm::vec3& up, float yaw, float pitch) {
+    
+    reserved->camera = std::make_unique<eng::Camera>(position, up, yaw, pitch);
 }
 
 

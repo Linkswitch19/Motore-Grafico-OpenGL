@@ -14,14 +14,7 @@
 
 
 namespace eng {
-    enum Camera_Movement {
-        FORWARD,
-        BACKWARD,
-        LEFT,
-        RIGHT,
-        UP,
-        DOWN
-    };
+    
 
     // Valori di default per le impostazioni della camera
     const float YAW = -90.0f;

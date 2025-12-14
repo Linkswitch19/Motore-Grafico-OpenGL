@@ -24,6 +24,7 @@
 #include <math.h>
 #include "node.h"
 #include "textHUD.h"
+#include "enums.h"
 
 #include <list>
 
@@ -93,75 +94,6 @@ using namespace std;
          updateVisuals();
      }
 
-     // Gestione input: Ritorna true se lo stato è cambiato
-     void handleInput(unsigned char key) {
-         int poleIndex = -1;
-         if (key == '1') poleIndex = 0;
-         else if (key == '2') poleIndex = 1;
-         else if (key == '3') poleIndex = 2;
-         else return; // Tasto non valido per il gioco
-
-         if (selectedSourcePole == -1) {
-             // --- FASE 1: Selezione Sorgente ---
-             if (poles[poleIndex].empty()) {
-                 Eng::Base::getInstance().setMessage("Palo Vuoto!");
-             }
-             else {
-                 selectedSourcePole = poleIndex;
-                 
-                 int diskID = poles[poleIndex].back();
-
-                 
-                 std::string msg = "Hai preso il Disco " + std::to_string(diskID) + " (Scegli dove metterlo)";
-                 updateVisuals();
-
-                 
-                 Eng::Base::getInstance().setMessage(msg);
-                 
-             }
-         }
-         else {
-             // --- FASE 2: Selezione Destinazione ---
-             int source = selectedSourcePole;
-             int dest = poleIndex;
-             Eng::Base::getInstance().setMessage(""); 
-
-             // Annulla selezione se si preme lo stesso palo
-             if (source == dest) {
-                 std::cout << "Selezione annullata." << std::endl;
-                 selectedSourcePole = -1;
-                 updateVisuals();
-                 return;
-             }
-
-             // Logica Hanoi: Verifica validità mossa
-             int diskToMove = poles[source].back(); // Il disco in cima al palo sorgente
-
-             bool validMove = true;
-             if (!poles[dest].empty()) {
-                
-                 int topDiskDest = poles[dest].back();
-                 if (diskToMove < topDiskDest) { // <--- CAMBIATO DA > A <
-                     validMove = false;
-                     std::cout << "MOSSA INVALIDA: Non puoi mettere un disco GRANDE (ID "
-                         << diskToMove << ") su uno PICCOLO (ID " << topDiskDest << ")!" << std::endl;
-                 }
-
-
-             }
-
-             if (validMove) {
-                 // Esegui sposta logico
-                 poles[source].pop_back();
-                 poles[dest].push_back(diskToMove);
-                 std::cout << "Disco spostato da " << (source + 1) << " a " << (dest + 1) << std::endl;
-             }
-
-             // Resetta selezione
-             selectedSourcePole = -1;
-             updateVisuals();
-         }
-     }
 
      void updateVisuals() {
          auto& engine = Eng::Base::getInstance();
@@ -211,13 +143,68 @@ HanoiGame game;
 
 
 void keyboardCallback(unsigned char key, int x, int y) {
-    //esc
-    if (key == 27) {
-        std::cout << "Uscita richiesta..." << std::endl;
-        exit(0);
-        
+    // Ottieni l'istanza dell'engine
+    Eng::Base& eng = Eng::Base::getInstance();
+
+    float dt = 1.0f; // Delta time fittizio
+
+    // Usa tolower per uniformare maiuscole/minuscole
+    switch (tolower(key)) {
+
+        // --- MOVIMENTO WASD ---
+    case 'w': eng.moveCamera(eng::FORWARD, dt); break;
+    case 's': eng.moveCamera(eng::BACKWARD, dt); break;
+    case 'a': eng.moveCamera(eng::LEFT, dt); break;
+    case 'd': eng.moveCamera(eng::RIGHT, dt); break;
+    case 'q': eng.moveCamera(eng::UP, dt); break;   // Opzionale
+    case 'e': eng.moveCamera(eng::DOWN, dt); break; // Opzionale
+
+        // --- ROTAZIONE ---
+    case 'k':
+        eng.rotateCamera(-90.0f);
+        std::cout << "Ruotato di 90 gradi" << std::endl;
+        break;
+
+        // --- VISUALE LATERALE (J) ---
+    case 'j': {
+        static bool isSideView = false;
+        if (!isSideView) {
+            // Vai di lato: Pos(60, 10, -40), Up(0,1,0), Yaw(-180), Pitch(0)
+            eng.setCameraPosition(glm::vec3(60.0f, 10.0f, -40.0f), glm::vec3(0.0f, 1.0f, 0.0f), -180.0f, 0.0f);
+            isSideView = true;
+        }
+        else {
+            // Torna normale
+            eng.setCameraPosition(glm::vec3(0.0f, 10.0f, 50.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
+            isSideView = false;
+        }
+        break;
     }
-    game.handleInput(key);
+
+            // --- VISTA DALL'ALTO (U) ---
+    case 'u': {
+        static bool isTopView = false;
+        if (!isTopView) {
+            // Vai sopra: Pos(0, 60, -40), Yaw(-90), Pitch(-89)
+            eng.setCameraPosition(glm::vec3(0.0f, 60.0f, -40.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -89.0f);
+            std::cout << "Visuale: ALTO" << std::endl;
+            isTopView = true;
+        }
+        else {
+            // Reset normale
+            eng.setCameraPosition(glm::vec3(0.0f, 10.0f, 50.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
+            std::cout << "Visuale: NORMALE" << std::endl;
+            isTopView = false;
+        }
+        break;
+    }
+
+            // ESC per uscire
+    case 27:
+        eng.free();
+        exit(0);
+        break;
+    };
     
  
 
