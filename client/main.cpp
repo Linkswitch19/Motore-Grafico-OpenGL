@@ -250,11 +250,16 @@ int main(int argc, char *argv[])
    eng.setKeyboardCallback(keyboardCallback);
    
    eng.init("My OpenGL window", 640, 480,argc,argv);
+   eng.createOrb(0.0f, 5.0f, -47.0f);
+   eng.createOrb(0.0f, 5.0f, -60.0f);
+   
+   
    eng.addText(eng::TextHUD("[ 1, 2, 3 ] : SELEZIONA DISCO", 10.0f, 20.0f, 1.0f, 1.0f, 0.0f));
    eng::TextHUD istruzioniData("[ J ] : Vista Laterale", 10.0f, 35.0f, 0.6f, 0.8f, 1.0f);
    eng.addText(istruzioniData);
    eng.addText(eng::TextHUD("[ W, A, S, D ] : Camera", 10.0f, 50.0f, 0.6f, 0.8f, 1.0f));
    game.init();
+   
    eng.startLoop();
    
 

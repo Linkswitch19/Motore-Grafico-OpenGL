@@ -69,7 +69,9 @@ namespace Eng {
 
 		// Singleton:
 		static Base& getInstance();
+		void updateAnimation(float deltaTime);
 		using KeyboardCallback = void(*)(unsigned char key, int x, int y);
+		void createOrb(float x, float y, float z);
 
 		// Init/free:
 		bool init(const char* title, unsigned int width, unsigned int height, int argc, char* argv[]);
