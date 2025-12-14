@@ -28,6 +28,7 @@ ENG_API Texture::Texture(const std::string& path) : filePath(path), textureId(0)
 
     // Scarichiamo l'originale, teniamo solo quello a 32 bit
     FreeImage_Unload(bitmap);
+    FreeImage_FlipVertical(bitmap32);
 
     this->width = FreeImage_GetWidth(bitmap32);
     this->height = FreeImage_GetHeight(bitmap32);

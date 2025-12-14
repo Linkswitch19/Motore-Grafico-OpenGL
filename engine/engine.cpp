@@ -156,6 +156,7 @@ void ENG_API Eng::Base::createOrb(float x, float y, float z)
 bool ENG_API Eng::Base::init(const char* title, unsigned int width, unsigned int height, int argc, char* argv[])
 {
     FreeImage_Initialise();
+    
    
    // Already initialized?
    if (reserved->initFlag)
