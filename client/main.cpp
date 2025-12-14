@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
    
    eng.init("My OpenGL window", 640, 480,argc,argv);
    eng.createOrb(0.0f, 5.0f, -47.0f);
-   eng.createOrb(0.0f, 5.0f, -60.0f);
+   eng.createOrb(0.0f, 5.0f, -65.0f);
    
    
    eng.addText(eng::TextHUD("[ 1, 2, 3 ] : SELEZIONA DISCO", 10.0f, 20.0f, 1.0f, 1.0f, 0.0f));

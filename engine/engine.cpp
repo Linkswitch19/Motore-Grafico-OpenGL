@@ -101,6 +101,7 @@ struct Eng::Base::Reserved
    std::unique_ptr<eng::Camera> camera = nullptr;
    std::vector<glm::vec3> orbsList;
    float rotationAngleY = 0.0f;
+   float totalTime = 0.0f;
    
    
 
@@ -154,6 +155,7 @@ Eng::Base ENG_API &Eng::Base::getInstance()
 
 void ENG_API Eng::Base::updateAnimation(float deltaTime) {
     reserved->rotationAngleY += 50.0f * deltaTime;
+    reserved->totalTime += deltaTime;
 }
 
 
@@ -592,25 +594,30 @@ void ENG_API Eng::Base::onDisplay()
         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, neonRed);
 
         for (int i = 0; i < reserved->orbsList.size(); i++) {
-            // Recupera l'ID della luce (GL_LIGHT1, GL_LIGHT2, ecc.)
             int lightID = GL_LIGHT0 + (i + 1);
             glm::vec3 pos = reserved->orbsList[i];
 
+            // --- CALCOLO OSCILLAZIONE (BOBBING) ---
+            // sin(tempo * velocità) * ampiezza
+            // Velocità 2.0f = oscilla abbastanza veloce
+            // Ampiezza 3.0f = sale e scende di 3 unità
+            float verticalOffset = sin(reserved->totalTime * 2.0f) * 3.0f;
+
             glPushMatrix();
 
-            // A. Spostamento alla posizione della sfera
-            glTranslatef(pos.x, pos.y, pos.z);
+            // --- Spostamento ---
+            // Aggiungiamo verticalOffset alla posizione Y originale
+            glTranslatef(pos.x, pos.y + verticalOffset, pos.z);
 
-            // B. Rotazione su se stessa (animazione)
+            // --- Rotazione ---
             glRotatef(reserved->rotationAngleY, 0.0f, 1.0f, 0.0f);
 
-            // C. Posizionamento Luce Reale
-            // La luce viene posizionata a (0,0,0) RELATIVAMENTE a questo punto
-            // (quindi esattamente al centro della sfera rossa)
+            // --- Posizionamento Luce Reale ---
+            // La luce segue la sfera (perché abbiamo traslato prima)
             GLfloat lightPos[] = { 0.0f, 0.0f, 0.0f, 1.0f };
             glLightfv(lightID, GL_POSITION, lightPos);
 
-            // D. Disegno Geometria Sfera
+            // --- Disegno Sfera Fisica ---
             glutSolidSphere(2.0, 32, 32);
 
             glPopMatrix();
