@@ -47,16 +47,16 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);FREEGLUT_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\engine;..\dependencies\glm\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\dependencies\glm\include;..\dependencies\freeglut\include;..\dependencies\freeimage\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\$(Platform)\$(Configuration);..\dependencies\freeglut\lib\$(Platform)\$(Configuration);..\dependencies\freeimage\lib\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freeglut_staticd.lib;FreeImage.lib;engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -65,28 +65,30 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);FREEGLUT_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\engine;..\dependencies\glm\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\dependencies\glm\include;..\dependencies\freeglut\include;..\dependencies\freeimage\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\$(Platform)\$(Configuration);..\dependencies\freeglut\lib\$(Platform)\$(Configuration);..\dependencies\freeimage\lib\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freeglut_staticd.lib;FreeImage.lib;engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="test_camera.cpp" />
     <ClCompile Include="test_engine.cpp" />
+    <ClCompile Include="test_ovo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_camera.h" />
     <ClInclude Include="test_engine.h" />
+    <ClInclude Include="test_ovo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

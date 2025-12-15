@@ -611,7 +611,7 @@ void ENG_API Eng::Base::setParent(const std::string& childName, const std::strin
 
     // 4. ATTACCA AL NUOVO PADRE
     newParentNode->add_child(childNode);
-    std::cout << "Reparenting: " << childName << " ora è figlio di " << parentName << std::endl;
+    std::cout << "Reparenting: " << childName << " ora e' figlio di " << parentName << std::endl;
 }
 
 void ENG_API Eng::Base::timerCallback(int value)

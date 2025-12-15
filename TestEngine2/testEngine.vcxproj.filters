@@ -18,18 +18,24 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="test_engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_camera.cpp">
+    <ClCompile Include="test_ovo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="test_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="test_engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test_camera.h">
+    <ClInclude Include="test_ovo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

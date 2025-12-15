@@ -3,6 +3,7 @@
 #include "engine.h"
 #include "test_engine.h" // Includiamo i nostri test
 #include "test_camera.h"
+#include "test_ovo.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "========================================" << std::endl;
@@ -16,6 +17,9 @@ int main(int argc, char* argv[]) {
     test_initialization(argc, argv);
 
     test_camera_math();
+
+    // --- I/O & Parsing ---
+    test_ovo_parsing(); // <--- Eseguiamo il test del parser qui
 
     // 3. Test Robustezza & Risorse
     test_robustness();
