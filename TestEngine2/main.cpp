@@ -41,9 +41,7 @@ int main(int argc, char* argv[]) {
     // Pulizia finale
     Eng::Base::getInstance().free();
 
-    // Attesa output
-    std::cout << "Premi INVIO per uscire...";
-    std::cin.get();
+  
 
     return 0;
 }
