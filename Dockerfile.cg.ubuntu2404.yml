@@ -1,0 +1,18 @@
+FROM ubuntu:24.04
+
+RUN apt update
+
+# install gcc, g++, libc-dev, make
+RUN apt install -y build-essential
+
+# install cpp static checking utility
+RUN apt install -y cppcheck
+
+# install cg dependencies
+RUN apt install -y libopengl-dev
+RUN apt install -y libgl-dev
+RUN apt install -y libglm-dev
+RUN apt install -y libgl1-mesa-dev
+RUN apt install -y libglu1-mesa-dev
+RUN apt install -y libfreeimage-dev
+RUN apt install -y freeglut3-dev

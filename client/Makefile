@@ -3,6 +3,13 @@ CXX      = g++
 CXXFLAGS = -Wall -std=c++20 -fexceptions
 INC      = -I../engine
 
+# --- AGGIUNTA PER GITLAB CI ---
+.PHONY: client
+# Quando la CI scrive "make client", noi compiliamo tutto (all)
+client: all
+
+# ------------------------------
+
 # Configurazioni Debug/Release
 ifdef DEBUG
     CXXFLAGS += -g -D_DEBUG

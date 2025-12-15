@@ -1,0 +1,51 @@
+stages:
+  - structure
+  - engine
+  - client
+
+# use official computer graphics image (based on ubuntu 24.04)
+image: gitlab-edu.supsi.ch:5050/dti-isin/labingsw/common:ubuntu2404-cg
+
+structure:
+  # verify project structure
+  stage: structure
+  script:
+    - '[ -d engine ] || exit 1'
+    - '[ -d client ] || exit 1'
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"
+
+engine:
+  # compile, link and test engine
+  stage: engine
+  before_script:
+    - 'cd engine'
+  script:
+    - 'make clean'      # Clean the build environment
+    - 'make engine'     # Compile all engine components (.o) and link libengine.so
+    - 'make test'       # Compile and link test runner and run all tests (test runner returns -1 if any tests failed)
+  after_script:
+    - 'cd ..'
+  artifacts:
+    paths:
+      - engine/bin/Release/libengine.so
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"
+
+client:
+  # compile and link client
+  stage: client
+  dependencies:
+    - engine
+  before_script:
+    - 'cd client'
+  script:
+    - 'make clean'      # Clean the build environment
+    - 'make client'     # Compile all client components (.o) and link client
+  after_script:
+    - 'cd ..'
+  artifacts:
+    paths:
+      - client/bin/Release/client
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"

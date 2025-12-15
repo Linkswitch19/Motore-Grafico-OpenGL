@@ -1,4 +1,15 @@
 # engine/Makefile
+# --- AGGIUNTA PER GITLAB CI ---
+.PHONY: engine test
+# 1. Quando la CI scrive "make engine", noi compiliamo tutto (all)
+engine: all
+
+# 2. Quando la CI scrive "make test", noi saltiamo nella cartella a fianco ed eseguiamo i test
+test:
+	@echo "=== CI sta chiedendo i test, delego a TestEngine2 ==="
+	$(MAKE) -C ../TestEngine2 run
+
+# ------------------------------
 CXX      = g++
 CXXFLAGS = -Wall -std=c++20 -fPIC -fexceptions
 LDFLAGS  = -shared

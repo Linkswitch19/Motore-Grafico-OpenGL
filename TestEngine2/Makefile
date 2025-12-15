@@ -2,6 +2,15 @@ CXX      = g++
 CXXFLAGS = -Wall -std=c++20 -fexceptions
 INC      = -I../engine
 
+# ... (resto del file) ...
+
+# Regola run: compila ED esegue
+run: $(TARGET)
+	@echo "--- Eseguo i Test per la CI ---"
+	@./$(TARGET)
+
+# ... (resto del file) ...
+
 # Configurazioni Debug/Release
 ifdef DEBUG
     CXXFLAGS += -g -D_DEBUG
