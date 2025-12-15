@@ -4,6 +4,7 @@
 #include "test_engine.h" // Includiamo i nostri test
 #include "test_camera.h"
 #include "test_ovo.h"
+#include "test_texture.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "========================================" << std::endl;
@@ -20,6 +21,7 @@ int main(int argc, char* argv[]) {
 
     // --- I/O & Parsing ---
     test_ovo_parsing(); // <--- Eseguiamo il test del parser qui
+    test_texture_system(); // in verita già controlla prima
 
     // 3. Test Robustezza & Risorse
     test_robustness();

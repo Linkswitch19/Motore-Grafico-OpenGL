@@ -84,11 +84,13 @@
     <ClCompile Include="test_camera.cpp" />
     <ClCompile Include="test_engine.cpp" />
     <ClCompile Include="test_ovo.cpp" />
+    <ClCompile Include="test_texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_camera.h" />
     <ClInclude Include="test_engine.h" />
     <ClInclude Include="test_ovo.h" />
+    <ClInclude Include="test_texture.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
