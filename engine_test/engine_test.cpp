@@ -1,41 +1,34 @@
-// main.cpp
 #include <iostream>
+#include "test_utils.h"
+#include "test_scene.h"
 #include "engine.h"
-#include "test_engine.h" // Includiamo i nostri test
-#include "test_camera.h"
+#include "test_rendering.h"
+// Includi i nostri nuovi file di test
+
 
 int main(int argc, char* argv[]) {
     std::cout << "========================================" << std::endl;
     std::cout << "      ENGINE AUTOMATED UNIT TESTS       " << std::endl;
     std::cout << "========================================" << std::endl;
 
-    // 1. Test Singleton (pre-init)
-    test_singleton();
+    // 1. Inizializza Engine (necessario per OpenGL/GLUT context se usato)
+    Eng::Base::getInstance().init("Test Runner", 800, 600, argc, argv);
 
-    // 2. Test Inizializzazione (Init reale)
-    test_initialization(argc, argv);
+    // --- GRUPPO 1: SCENE GRAPH ---
+    test_node_logic();
+    test_mesh_data();
 
+    // --- GRUPPO 2: RENDERING & MATH ---
+    test_material();
     test_camera_math();
-
-    // 3. Test Robustezza & Risorse
-    test_robustness();
-    test_orb_limit();
-    test_texture_fail_safe();
-
-    // 4. Test Scena e Logica
-    test_scene_graph_deep_search();
-    test_scene_graph_manipulation();
-    // --- GRUPPO 4: Integrazione ---
-    test_camera_engine_integration();
+    test_lights_compilation();
 
     std::cout << "========================================" << std::endl;
     std::cout << "   TUTTI I TEST SUPERATI CON SUCCESSO   " << std::endl;
     std::cout << "========================================" << std::endl;
 
-    // Pulizia finale
     Eng::Base::getInstance().free();
 
-    // Attesa output
     std::cout << "Premi INVIO per uscire...";
     std::cin.get();
 
