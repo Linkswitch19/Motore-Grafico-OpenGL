@@ -1,20 +1,20 @@
-MAKE = make
+# Makefile Generale
+MAKE = make --no-print-directory
+
+.PHONY: all clean clean_all build_engine build_client
 
 all: build_engine build_client
 
-build_engine: 
-	$(MAKE) -C engine all
+build_engine:
+	@echo "=== Building Engine ==="
+	@$(MAKE) -C engine
 
 build_client: build_engine
-	$(MAKE) -C client all
+	@echo "=== Building Client ==="
+	@$(MAKE) -C client
 
-clean: clean_engine clean_client
-
-clean_engine: 
-	$(MAKE) -C engine clean
-
-clean_client: 
-	$(MAKE) -C client clean
-
-.PHONY: clean_engine clean_client
-
+clean:
+	@echo "=== Cleaning Engine ==="
+	@$(MAKE) -C engine clean
+	@echo "=== Cleaning Client ==="
+	@$(MAKE) -C client clean

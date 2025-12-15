@@ -525,7 +525,7 @@ void Eng::Base::renderHUD() {
     float stepY = 15.0f;
 
     // FPS
-    sprintf_s(buffer, sizeof(buffer), "FPS: %d", fps);
+    snprintf(buffer, sizeof(buffer), "FPS: %d", fps);
     glRasterPos2f(textX, textY);
     glutBitmapString(GLUT_BITMAP_8_BY_13, (unsigned char*)buffer);
 

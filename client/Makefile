@@ -1,82 +1,43 @@
-CXX = g++
-AR = ar
-LD = g++
-WINDRES = windres
+# client/Makefile
+CXX      = g++
+CXXFLAGS = -Wall -std=c++20 -fexceptions
+INC      = -I../engine
 
-INC = -I../engine
-CFLAGS = -Wall -std=c++20 -fexceptions
-RCFLAGS = 
-RESINC = 
-LIBDIR = 
-LIB = -lengine
-LDFLAGS = 
+# Configurazioni Debug/Release
+ifdef DEBUG
+    CXXFLAGS += -g -D_DEBUG
+    LIB_DIR   = ../engine/bin/Debug
+    OUT_DIR   = bin/Debug
+else
+    CXXFLAGS += -O2
+    LIB_DIR   = ../engine/bin/Release
+    OUT_DIR   = bin/Release
+endif
 
-INC_DEBUG = $(INC)
-CFLAGS_DEBUG = $(CFLAGS) -g -D_DEBUG
-RESINC_DEBUG = $(RESINC)
-RCFLAGS_DEBUG = $(RCFLAGS)
-LIBDIR_DEBUG = $(LIBDIR) -L../engine/bin/Debug
-LIB_DEBUG = $(LIB)
-LDFLAGS_DEBUG = $(LDFLAGS)
-OBJDIR_DEBUG = obj/Debug
-DEP_DEBUG = 
-OUT_DEBUG = bin/Debug/client
+# Linker Flags
+# -Wl,-rpath tells the loader where to look for libengine.so at runtime
+LDFLAGS = -L$(LIB_DIR) -Wl,-rpath=\$$ORIGIN/../../$(LIB_DIR)
+LIBS     = -lengine -lfreeimage -lglut -lGL -lGLU
 
-INC_RELEASE = $(INC)
-CFLAGS_RELEASE = $(CFLAGS) -O2
-RESINC_RELEASE = $(RESINC)
-RCFLAGS_RELEASE = $(RCFLAGS)
-LIBDIR_RELEASE = $(LIBDIR) -L../engine/bin/Release
-LIB_RELEASE = $(LIB)
-LDFLAGS_RELEASE = $(LDFLAGS) -s
-OBJDIR_RELEASE = obj/Release
-DEP_RELEASE = 
-OUT_RELEASE = bin/Release/client
+SRC = $(wildcard *.cpp)
+OBJ = $(SRC:%.cpp=obj/%.o)
+TARGET = $(OUT_DIR)/client
 
-OBJ_DEBUG = $(OBJDIR_DEBUG)/main.o
+.PHONY: all clean directories
 
-OBJ_RELEASE = $(OBJDIR_RELEASE)/main.o
+all: directories $(TARGET)
 
-all: debug release
+$(TARGET): $(OBJ)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 
-clean: clean_debug clean_release
+obj/%.o: %.cpp
+	@mkdir -p obj
+	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-before_debug: 
-	test -d bin/Debug || mkdir -p bin/Debug
-	test -d $(OBJDIR_DEBUG) || mkdir -p $(OBJDIR_DEBUG)
+directories:
+	@mkdir -p $(OUT_DIR)
+	@mkdir -p obj
 
-after_debug: 
-
-debug: before_debug out_debug after_debug
-
-out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
-	$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG) $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) $(LIB_DEBUG)
-
-$(OBJDIR_DEBUG)/main.o: main.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c main.cpp -o $(OBJDIR_DEBUG)/main.o
-
-clean_debug: 
-	rm -f $(OBJ_DEBUG) $(OUT_DEBUG)
-	rm -rf bin/Debug
-	rm -rf $(OBJDIR_DEBUG)
-
-before_release: 
-	test -d bin/Release || mkdir -p bin/Release
-	test -d $(OBJDIR_RELEASE) || mkdir -p $(OBJDIR_RELEASE)
-
-after_release: 
-
-release: before_release out_release after_release
-
-out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
-	$(LD) $(LIBDIR_RELEASE) -o $(OUT_RELEASE) $(OBJ_RELEASE)  $(LDFLAGS_RELEASE) $(LIB_RELEASE)
-
-$(OBJDIR_RELEASE)/main.o: main.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c main.cpp -o $(OBJDIR_RELEASE)/main.o
-
-clean_release: 
-	rm -f $(OBJ_RELEASE) $(OUT_RELEASE)
-	rm -rf bin/Release
-	rm -rf $(OBJDIR_RELEASE)
-
-.PHONY: before_debug after_debug clean_debug before_release after_release clean_release
+clean:
+	rm -rf obj
+	rm -rf bin
