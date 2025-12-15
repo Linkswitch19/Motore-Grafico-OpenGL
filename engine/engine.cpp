@@ -717,6 +717,23 @@ void ENG_API Eng::Base::setCameraPosition(const glm::vec3& position, const glm::
 }
 
 
+int ENG_API Eng::Base::getOrbCount() const {
+    // Legge la dimensione della lista nascosta nella struct reserved
+    if (reserved) {
+        return (int)reserved->orbsList.size();
+    }
+    return 0;
+}
+
+std::shared_ptr<eng::Node> ENG_API Eng::Base::getSceneRoot() {
+    // Restituisce il nodo radice nascosto nella struct reserved
+    if (reserved) {
+        return reserved->sceneRoot;
+    }
+    return nullptr;
+}
+
+
 
 
 

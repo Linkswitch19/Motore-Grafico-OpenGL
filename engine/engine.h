@@ -101,6 +101,12 @@ namespace Eng {
 		void moveCamera(eng::Camera_Movement direction, float deltaTime);
 		void rotateCamera(float angle);
 		void setCameraPosition(const glm::vec3& position, const glm::vec3& up, float yaw, float pitch);
+
+		// Restituisce il numero attuale di sfere create
+		int  getOrbCount() const;
+
+		// Restituisce il puntatore alla radice della scena (per controllare i nodi)
+		std::shared_ptr<eng::Node> getSceneRoot();
 		 
 
 
