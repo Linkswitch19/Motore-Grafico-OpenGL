@@ -227,7 +227,7 @@ Pipeline **GitLab CI** (`.gitlab-ci.yml`) su immagine Ubuntu 24.04, organizzata 
 
 ## 👥 Autori
 
-Progetto sviluppato dal **Gruppo 08** per il corso di *Computer Graphics* (Laboratorio di Ingegneria del Software), **SUPSI** — anno accademico 2025-2026.
+Progetto sviluppato da Andre per il corso di *Computer Graphics* (Laboratorio di Ingegneria del Software), **SUPSI** — anno accademico 2025-2026.
 
 <div align="center">
 
