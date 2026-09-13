@@ -1,93 +1,238 @@
-# Gruppo_08
+<div align="center">
 
+# 🎮 Motore Grafico OpenGL
 
+**Motore grafico 3D real-time scritto in C++20, con scene graph gerarchico, illuminazione Phong e un gioco dimostrativo — la Torre di Hanoi in 3D.**
 
-## Getting started
+[![Language](https://img.shields.io/badge/C%2B%2B-20-blue.svg?logo=c%2B%2B)](https://en.cppreference.com/w/cpp/20)
+[![Graphics API](https://img.shields.io/badge/OpenGL-Core-5586A4.svg?logo=opengl)](https://www.opengl.org/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)]()
+[![Build](https://img.shields.io/badge/CI-GitLab%20Pipeline-orange.svg?logo=gitlab)]()
+[![Status](https://img.shields.io/badge/status-in%20sviluppo-yellow.svg)]()
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+</div>
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+---
 
-## Add your files
+## 📑 Indice
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+- [Panoramica](#-panoramica)
+- [Struttura del progetto](#-struttura-del-progetto)
+- [Funzionalità del motore](#-funzionalità-del-motore)
+- [Applicazione dimostrativa: Torre di Hanoi 3D](#-applicazione-dimostrativa-torre-di-hanoi-3d)
+- [Architettura](#-architettura)
+- [Dipendenze](#-dipendenze)
+- [Compilazione](#-compilazione)
+- [Esecuzione](#-esecuzione)
+- [Test](#-test)
+- [Integrazione continua](#-integrazione-continua)
+- [Autori](#-autori)
+
+---
+
+## 📖 Panoramica
+
+**Motore-Grafico-OpenGL** è una libreria grafica 3D sviluppata da zero sopra le API OpenGL, come progetto del corso di *Computer Graphics* (Laboratorio di Ingegneria del Software) alla **SUPSI**. Espone un'interfaccia singleton (`Eng::Base`) che nasconde al client tutta la complessità di rendering, scene graph, illuminazione e gestione risorse, mantenendo un'API pubblica compatta e semplice da integrare.
+
+Il repository include tre componenti principali:
+
+| Componente | Descrizione |
+|---|---|
+| 🧩 `engine/` | Libreria del motore grafico (compilata come `libengine.so` / `.dll`) |
+| 🕹️ `client/` | Applicazione dimostrativa: Torre di Hanoi in 3D |
+| ✅ `TestEngine2/` | Suite di test automatici per la validazione del motore |
+
+---
+
+## 🗂 Struttura del progetto
 
 ```
-cd existing_repo
-git remote add origin https://gitlab-edu.supsi.ch/dti-isin/labingsw/labingsw02/2025-2026/cg/Gruppo_08.git
-git branch -M main
-git push -uf origin main
+Motore-Grafico-OpenGL/
+├── engine/             # Libreria del motore grafico
+│   ├── engine.h/.cpp       → Facade singleton (Eng::Base)
+│   ├── node.h/.cpp         → Scene graph (Node)
+│   ├── camera.h/.cpp       → Camera fly-cam prospettica/ortografica
+│   ├── mesh.h/.cpp         → Geometria e mesh renderizzabili
+│   ├── material.h/.cpp     → Materiali Phong/Blinn-Phong
+│   ├── texture.h/.cpp      → Gestione texture (FreeImage)
+│   ├── light.h/.cpp        → Luci (base)
+│   ├── point_light / spot_light / directional_light
+│   ├── light_manager.h/.cpp
+│   ├── scene_manager.h/.cpp
+│   ├── ovo_parser.h/.cpp   → Import mesh/scene in formato .ovo
+│   ├── renderer.h/.cpp     → Pipeline di rendering
+│   └── hud_manager / textHUD → HUD testuale a schermo
+│
+├── client/             # Gioco dimostrativo: Torre di Hanoi 3D
+│   └── main.cpp
+│
+├── TestEngine2/        # Unit test automatici del motore
+│   └── main.cpp
+│
+├── dependencies/       # Librerie di terze parti
+│   ├── glm/                → Algebra vettoriale/matriciale
+│   ├── freeglut/            → Finestre e input
+│   └── freeimage/           → Caricamento texture
+│
+├── hanoi.sln           # Soluzione Visual Studio
+└── .gitlab-ci.yml       # Pipeline di build e test
 ```
 
-## Integrate with your tools
+---
 
-- [ ] [Set up project integrations](https://gitlab-edu.supsi.ch/dti-isin/labingsw/labingsw02/2025-2026/cg/Gruppo_08/-/settings/integrations)
+## ⚙️ Funzionalità del motore
 
-## Collaborate with your team
+- 🌳 **Scene graph gerarchico** — nodi (`Node`) con matrici di trasformazione locali, figli e parent, per comporre scene complesse da mesh, luci e gruppi.
+- 📦 **Import mesh `.ovo`** — parser dedicato (`ovo_parser`) per caricare geometrie, materiali e gerarchie esportate in questo formato.
+- 🎨 **Materiali Phong / Blinn-Phong** — coefficienti ambient, diffuse, specular, emission e shininess per superficie, con texture opzionale.
+- 🖼️ **Texture mapping** tramite FreeImage (`.dds`, `.png`, ecc.).
+- 💡 **Illuminazione multipla** — luci direzionali, puntiformi (point light) e spot, tutte derivate da `Light` e coordinate da un `light_manager`.
+- 🌑 **Ombre** proiettate e gestione di "orb" di luce nella scena.
+- 🎥 **Camera fly-cam** — movimento in prima persona (WASD + mouse look, yaw/pitch), con proiezione prospettica e ortografica commutabile a runtime.
+- 🔠 **HUD testuale** — overlay di testo e messaggi a schermo tramite `hud_manager` / `textHUD`.
+- 📊 **Statistiche di rendering** — conteggio FPS e livelli di dettaglio (LOD) configurabili.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+L'intera implementazione interna è nascosta dietro un pattern **PIMPL**, così il client dipende solo da un'API pubblica minimale e stabile.
 
-## Test and Deploy
+---
 
-Use the built-in continuous integration in GitLab.
+## 🕹️ Applicazione dimostrativa: Torre di Hanoi 3D
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+`client/main.cpp` implementa una versione 3D del classico puzzle, usata come banco di prova del motore:
 
-***
+- selezione interattiva di dischi e pali tramite lo scene graph del motore;
+- **calibrazione automatica** delle posizioni dei pali a partire dai nodi caricati dalla scena;
+- **cronologia delle mosse** con supporto a undo/redo.
 
-# Editing this README
+---
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## 🏗️ Architettura
 
-## Suggestions for a good README
+```
+        ┌──────────────────────┐
+        │   client (Hanoi 3D)  │
+        └──────────┬───────────┘
+                    │  Eng::Base::getInstance()
+        ┌──────────▼───────────┐
+        │   engine (facade)    │
+        │  ─────────────────   │
+        │  scene_manager        │
+        │  light_manager        │
+        │  renderer              │
+        │  hud_manager            │
+        └──────────┬────────────┘
+                    │
+   ┌────────────────┼─────────────────┐
+   ▼                ▼                 ▼
+ Node graph      Material/Texture    Camera
+ (mesh, luci,    (Phong shading,     (fly-cam,
+  gruppi)         FreeImage)          proiezioni)
+```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+---
 
-## Name
-Choose a self-explaining name for your project.
+## 📦 Dipendenze
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+| Libreria | Ruolo |
+|---|---|
+| **OpenGL / GLU** | Rendering grafico low-level |
+| **FreeGLUT** | Creazione finestra e gestione input |
+| **FreeImage** | Caricamento e decodifica texture |
+| **GLM** | Algebra vettoriale e matriciale |
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+### Installazione su Linux (Ubuntu 24.04)
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```bash
+sudo apt update
+sudo apt install -y build-essential cppcheck \
+    libopengl-dev libgl-dev libglm-dev \
+    libgl1-mesa-dev libglu1-mesa-dev \
+    libfreeimage-dev freeglut3-dev
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### Windows
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Le versioni precompilate di FreeGLUT e FreeImage sono già incluse in `dependencies/`, pronte per l'uso con la soluzione Visual Studio `hanoi.sln`.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+---
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## 🔨 Compilazione
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### Linux (Makefile)
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+```bash
+# 1. Motore → genera engine/bin/Release/libengine.so
+cd engine
+make engine
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+# 2. Test del motore
+make test
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+# 3. Client → genera client/bin/Release/client
+cd ../client
+make client
+```
 
-## License
-For open source projects, say how it is licensed.
+> Per una build di debug: aggiungere `DEBUG=1`, ad esempio `make engine DEBUG=1`.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### Windows (Visual Studio)
+
+Aprire `hanoi.sln` e compilare i progetti `engine`, `client` e `TestEngine2`.
+
+### Code::Blocks
+
+Sono disponibili anche i progetti `.cbp` per `engine`, `client` e `TestEngine2`.
+
+---
+
+## ▶️ Esecuzione
+
+```bash
+cd client/bin/Release
+./client
+```
+
+---
+
+## ✅ Test
+
+La suite `TestEngine2` copre, tra gli altri:
+
+- inizializzazione del singleton dell'engine,
+- matematica della camera,
+- parsing dei file `.ovo`,
+- manipolazione e ricerca nello scene graph,
+- robustezza e gestione risorse,
+- integrazione camera ↔ engine.
+
+```bash
+cd engine
+make test
+```
+
+---
+
+## 🚀 Integrazione continua
+
+Pipeline **GitLab CI** (`.gitlab-ci.yml`) su immagine Ubuntu 24.04, organizzata in 4 stage:
+
+| Stage | Descrizione |
+|---|---|
+| 1️⃣ `structure` | Verifica che esistano le cartelle `engine` e `client` |
+| 2️⃣ `engine` | Build e test del motore → pubblica `libengine.so` come artifact |
+| 3️⃣ `client` | Build del client → pubblica l'eseguibile come artifact |
+| 4️⃣ `package` | Crea l'archivio `GraficaLinky_Release.tar.gz` pronto alla distribuzione |
+
+---
+
+## 👥 Autori
+
+Progetto sviluppato dal **Gruppo 08** per il corso di *Computer Graphics* (Laboratorio di Ingegneria del Software), **SUPSI** — anno accademico 2025-2026.
+
+<div align="center">
+
+---
+
+Fatto con 🎓 alla SUPSI
+
+</div>
