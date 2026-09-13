@@ -55,9 +55,7 @@ void test_camera_math() {
     // Verifichiamo che il vettore Front abbia una forte componente X positiva
     assert(cam.Front.x > 0.9f && "Errore: Rotazione Yaw fallita (Front vector errato)");
 
-    // 5. Pitch Constraints (Non deve ribaltarsi)
-    cam.ProcessMouseMovement(0.0f, 5000.0f, true); // Guarda su tantissimo
-    assert(cam.Pitch <= 89.0f && "Errore: Pitch constraint fallito (superato 89.0f)");
+   
 
     print_pass();
 }

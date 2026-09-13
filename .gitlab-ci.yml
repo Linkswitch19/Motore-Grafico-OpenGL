@@ -1,0 +1,81 @@
+stages:
+  - structure
+  - engine
+  - client
+  - package
+
+# use official computer graphics image (based on ubuntu 24.04)
+image: gitlab-edu.supsi.ch:5050/dti-isin/labingsw/common:ubuntu2404-cg
+
+structure:
+  # verify project structure
+  stage: structure
+  script:
+    - '[ -d engine ] || exit 1'
+    - '[ -d client ] || exit 1'
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"
+
+engine:
+  # compile, link and test engine
+  stage: engine
+  before_script:
+    - 'cd engine'
+  script:
+    - 'make clean'      # Clean the build environment
+    - 'make engine'     # Compile all engine components (.o) and link libengine.so
+    - 'make test' # Compile and link test runner and run all tests (test runner returns -1 if any tests failed)
+  after_script:
+    - 'cd ..'
+  artifacts:
+    paths:
+      - engine/bin/Release/libengine.so
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"
+
+client:
+  # compile and link client
+  stage: client
+  dependencies:
+    - engine
+  before_script:
+    - 'cd client'
+  script:
+    - 'make clean'      # Clean the build environment
+    - 'make client'     # Compile all client components (.o) and link client
+  after_script:
+    - 'cd ..'
+  artifacts:
+    paths:
+      - client/bin/Release/client
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"
+
+package:
+  stage: package
+  # Usa le dipendenze per scaricare gli artefatti generati negli stage precedenti
+  dependencies:
+    - engine
+    - client
+  script:
+    - echo "=== Creazione Pacchetto di Rilascio ==="
+    # 1. Crea una cartella temporanea per la distribuzione
+    - mkdir -p dist
+    
+    # 2. Copia l'eseguibile e la libreria nella cartella
+    - cp client/bin/Release/client dist/
+    - cp engine/bin/Release/libengine.so dist/
+    
+    # 3. Crea l'archivio compresso (.tar.gz) contenente i file
+    # -C dist . significa "entra nella cartella dist e comprimi tutto quello che trovi"
+    - tar -czvf GraficaLinky_Release.tar.gz -C dist .
+    
+  artifacts:
+    # Pubblica l'archivio come artefatto scaricabile da GitLab
+    name: "GraficaLinky-Release-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - GraficaLinky_Release.tar.gz
+    expire_in: 1 week
+  rules:
+    # Esegui solo sui branch principali
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"

@@ -78,19 +78,23 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>..\dependencies\freeglut\lib\$(Platform)\$(Configuration);..\dependencies\freeimage\lib\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>freeglut_staticd.lib;%(AdditionalDependencies);FreeImage.lib</AdditionalDependencies>
+      <AdditionalDependencies>freeglut_static.lib;%(AdditionalDependencies);FreeImage.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="directional_light.cpp" />
     <ClCompile Include="engine.cpp" />
+    <ClCompile Include="hud_manager.cpp" />
     <ClCompile Include="light.cpp" />
+    <ClCompile Include="light_manager.cpp" />
     <ClCompile Include="material.cpp" />
     <ClCompile Include="mesh.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="ovo_parser.cpp" />
     <ClCompile Include="point_light.cpp" />
+    <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="scene_manager.cpp" />
     <ClCompile Include="spot_light.cpp" />
     <ClCompile Include="textHUD.cpp" />
     <ClCompile Include="texture.cpp" />
@@ -100,13 +104,17 @@
     <ClInclude Include="directional_light.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="enums.h" />
+    <ClInclude Include="hud_manager.h" />
     <ClInclude Include="lib.h" />
     <ClInclude Include="light.h" />
+    <ClInclude Include="light_manager.h" />
     <ClInclude Include="material.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="ovo_parser.h" />
     <ClInclude Include="point_light.h" />
+    <ClInclude Include="renderer.h" />
+    <ClInclude Include="scene_manager.h" />
     <ClInclude Include="spot_light.h" />
     <ClInclude Include="textHUD.h" />
     <ClInclude Include="texture.h" />

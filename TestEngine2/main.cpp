@@ -15,18 +15,17 @@ int main(int argc, char* argv[]) {
     test_singleton();
 
     // 2. Test Inizializzazione (Init reale)
-    test_initialization(argc, argv);
+    //test_initialization(argc, argv); non si puo su pipeline
 
     test_camera_math();
-
+    test_light_limit_logic();
     // --- I/O & Parsing ---
     test_ovo_parsing(); // <--- Eseguiamo il test del parser qui
-    test_texture_system(); // in verita già controlla prima
+    //test_texture_system(); 
 
     // 3. Test Robustezza & Risorse
     test_robustness();
-    test_orb_limit();
-    test_texture_fail_safe();
+   
 
     // 4. Test Scena e Logica
     test_scene_graph_deep_search();

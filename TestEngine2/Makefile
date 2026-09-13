@@ -2,15 +2,6 @@ CXX      = g++
 CXXFLAGS = -Wall -std=c++20 -fexceptions
 INC      = -I../engine
 
-# ... (resto del file) ...
-
-# Regola run: compila ED esegue
-run: $(TARGET)
-	@echo "--- Eseguo i Test per la CI ---"
-	@./$(TARGET)
-
-# ... (resto del file) ...
-
 # Configurazioni Debug/Release
 ifdef DEBUG
     CXXFLAGS += -g -D_DEBUG
@@ -25,7 +16,7 @@ endif
 # Linker Flags
 # Linka libengine esattamente come fa il client
 LDFLAGS = -L$(LIB_DIR) -Wl,-rpath=\$$ORIGIN/../../$(LIB_DIR)
-LIBS     = -lengine -lfreeimage -lglut -lGL -lGLU
+LIBS    = -lengine -lfreeimage -lglut -lGL -lGLU
 
 SRC = $(wildcard *.cpp)
 OBJ = $(SRC:%.cpp=obj/%.o)
@@ -36,19 +27,23 @@ TARGET = $(OUT_DIR)/TestEngine2
 all: directories $(TARGET)
 
 # Compilazione dell'eseguibile di test
+# AGGIUNTA: Creo la cartella di output qui per sicurezza
 $(TARGET): $(OBJ)
+	@mkdir -p $(OUT_DIR)
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 
-# Regola per ESEGUIRE i test
+# Regola per ESEGUIRE i test (Ne teniamo solo una, quella in fondo)
 # Se ./$(TARGET) ritorna errore (exit code != 0), il make si ferma qui.
 run: $(TARGET)
 	@echo "--- Executing Tests ---"
 	@./$(TARGET)
 
+# Compilazione oggetti
 obj/%.o: %.cpp
 	@mkdir -p obj
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
+# Questa rimane per chi lancia "make all"
 directories:
 	@mkdir -p $(OUT_DIR)
 	@mkdir -p obj

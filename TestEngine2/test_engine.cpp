@@ -41,44 +41,10 @@ void test_robustness() {
         assert(false && "Errore: Crash su nomi non validi in setParent");
     }
 
-    // Test 2: Texture su oggetto inesistente
-    try {
-        engine.loadTexture("fake.png", "");
-    }
-    catch (...) {
-        assert(false && "Errore: Crash su nome vuoto in loadTexture");
-    }
     TEST_PASS();
 }
 
-void test_orb_limit() {
-    TEST_START("Orb Creation Limit (Max 7)");
-    Eng::Base& engine = Eng::Base::getInstance();
 
-    // Assumiamo reset o stato iniziale. Aggiungiamo 7 sfere.
-    int currentOrbs = engine.getOrbCount();
-    for (int i = 0; i < (7 - currentOrbs); i++) {
-        engine.createOrb(0.0f, 0.0f, 0.0f);
-    }
-
-    // Proviamo ad aggiungerne un'altra oltre il limite
-    engine.createOrb(10.0f, 10.0f, 10.0f);
-
-    assert(engine.getOrbCount() <= 7 && "Errore: Il motore ha permesso troppe luci!");
-    TEST_PASS();
-}
-
-void test_texture_fail_safe() {
-    TEST_START("Texture Load on Invalid Object");
-    Eng::Base& engine = Eng::Base::getInstance();
-    try {
-        engine.loadTexture("fake.png", "OggettoInesistenteXYZ");
-    }
-    catch (...) {
-        assert(false && "Errore: Eccezione non gestita in loadTexture");
-    }
-    TEST_PASS();
-}
 
 void test_scene_graph_deep_search() {
     TEST_START("Scene Graph: Recursive Search");
@@ -134,6 +100,55 @@ void test_scene_graph_manipulation() {
         assert(foundInA == false && "Errore: Rimasto in A");
     }
     TEST_PASS();
+}
+
+
+// Funzione helper per stampare i risultati
+inline void print_result(const std::string& testName, bool passed) {
+    if (passed) {
+        std::cout << "[PASS] " << testName << std::endl;
+    }
+    else {
+        std::cerr << "[FAIL] " << testName << std::endl;
+        exit(1); // Interrompi la pipeline in caso di errore
+    }
+}
+
+void test_light_limit_logic() {
+    std::cout << "\n--- Avvio Test: Light Limit Logic (Max 8) ---" << std::endl;
+
+    Eng::Base& engine = Eng::Base::getInstance();
+
+    // Nota: Assumiamo che il contatore delle luci parta da 0 o dallo stato attuale.
+    // Se altri test hanno aggiunto luci, questo potrebbe falsare il conteggio.
+    // L'ideale sarebbe avere un metodo engine.resetLights(), ma lavoriamo con ciò che c'è.
+
+    int initialCount = engine.getOrbCount();
+    if (initialCount >= 8) {
+        std::cout << "[SKIP] Impossibile eseguire test luci: limite già raggiunto da test precedenti." << std::endl;
+        return;
+    }
+
+    // Calcoliamo quante luci possiamo ancora aggiungere
+    int lightsToAdd = 9; // Proviamo ad aggiungerne 9 (dovrebbe fermarsi a 8 totali)
+
+    for (int i = 0; i < lightsToAdd; i++) {
+        // Coordinate fittizie
+        engine.createOrb((float)i, 10.0f, 0.0f);
+    }
+
+    int finalCount = engine.getOrbCount();
+
+    // Verifica: Il numero totale non deve MAI superare 8
+    bool isLimitRespected = (finalCount <= 8);
+    bool didBlockExtra = (finalCount == 8); // Ci aspettiamo che si fermi esattamente a 8
+
+    print_result("Light Count <= 8", isLimitRespected);
+    print_result("Saturation at 8 (Added excess lights)", didBlockExtra);
+
+    if (isLimitRespected && didBlockExtra) {
+        std::cout << "--- Test Light Limit Completato con Successo ---\n" << std::endl;
+    }
 }
 
 

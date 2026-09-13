@@ -23,7 +23,7 @@ endif
 
 # Linker Flags
 # -Wl,-rpath tells the loader where to look for libengine.so at runtime
-LDFLAGS = -L$(LIB_DIR) -Wl,-rpath=\$$ORIGIN/../../$(LIB_DIR)
+LDFLAGS = -L$(LIB_DIR) -Wl,-rpath=\$$ORIGIN/../../../engine/bin/Release:\$$ORIGIN
 LIBS     = -lengine -lfreeimage -lglut -lGL -lGLU
 
 SRC = $(wildcard *.cpp)

@@ -1,345 +1,430 @@
 /**
- * @file		main.cpp
- * @brief	Client application (that uses the graphics engine)
- *
- * @author	Achille Peternier (C) SUPSI [achille.peternier@supsi.ch] << change this to your group members
+ * @file main.cpp
+ * @brief Client application using the graphics engine to implement the Tower of Hanoi game.
  */
 
+ //=================
+ // Includes
+ //=================
 
+#include "engine.h"
 
-//////////////
-// #INCLUDE //
-//////////////
-
-   // Library header:
- #include "engine.h"
-
-   // C/C++:
- #include <iostream>
- #include <vector>
-
-#include <math.h>
-#include "node.h"
-#include "textHUD.h"
-#include "enums.h"
-
+#include <iostream>
+#include <vector>
 #include <list>
+#include <cmath>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+
 using namespace std;
 #define _CRT_SECURE_NO_WARNINGS
 
+//=================
+// Configuration
+//=================
 
-// Configurazione posizioni dei pali nel mondo 3D (da aggiustare in base al modello)
- float POLE_X_POSITIONS[3] = { -20.0f, 0.0f, 20.0f }; // Palo 1, 2, 3
- float DISK_HEIGHT = 0.5f;     // Altezza di uno step (spessore disco)
- float BASE_HEIGHT = 0.0f;     // Altezza base da terra
+/** X positions of the three poles in world coordinates */
+float POLE_X_POSITIONS[3] = { -20.0f, 0.0f, 20.0f };
 
+/** Vertical thickness of a single disk */
+float DISK_HEIGHT = 0.0f;
 
- class HanoiGame {
- private:
-     // Stato logico: 3 pali, ognuno contiene gli ID dei dischi (1 a 7)
-     std::vector<int> poles[3];
+/** Base height of the poles from the ground */
+float BASE_HEIGHT = 0.0f;
 
-     // Riferimenti ai nodi grafici per aggiornarli
-     std::shared_ptr<eng::Node> diskNodes[7];
-     std::string poleNodeNames[3] = { "Palo1", "Palo2", "Palo3" };
+//=================
+// Hanoi Game Class
+//=================
 
-     int selectedSourcePole = -1; // -1 significa "nessuna selezione", 0-2 è l'indice
+/**
+ * @class HanoiGame
+ * @brief Handles game logic and synchronization with the graphical scene.
+ */
+class HanoiGame {
 
- public:
-     void init() {
-         auto& engine = Eng::Base::getInstance();
+struct Move {
+        int sourcePole;
+        int destPole;
+};
+private:
+    /** Logical state: each pole stores disk IDs (1 = smallest, 7 = largest) */
+    std::vector<int> poles[3];
 
-         // 1. Carica i nodi
-         for (int i = 0; i < 7; i++) {
-             std::string name = "Disco" + std::to_string(i + 1);
-             diskNodes[i] = engine.getNode(name);
+    /** Scene nodes corresponding to the disks */
+    std::shared_ptr<eng::Node> diskNodes[7];
 
-             if (!diskNodes[i]) std::cout << "ERRORE: " << name << " non trovato" << std::endl;
-         }
+    /** Names of the pole nodes in the scene */
+    std::string poleNodeNames[3] = { "Palo1", "Palo2", "Palo3" };
 
-         // --- CALIBRAZIONE AUTOMATICA ---
-         // Usiamo il disco più basso (Disco7, indice 6) per capire dove sta il Palo 1 e a che altezza.
-         if (diskNodes[6]) {
-             glm::mat4 m = diskNodes[6]->get_base_matrix();
+    /** Selected source pole (-1 means none selected) */
+    int selectedSourcePole = -1;
 
-             float startX = m[3][0]; // La X del disco nel file OVO
-             float startY = m[3][1]; // La Y del disco nel file OVO
+    std::vector<Move> history; // Tiene traccia delle mosse fatte
+    std::vector<Move> redoList; // Tiene traccia delle mosse annullate
 
-             std::cout << "Calibrazione: Disco7 trovato a X=" << startX << " Y=" << startY << std::endl;
+public:
+    /**
+     * @brief Initializes the game state and performs automatic scene calibration.
+     */
+    void init() {
+        auto& engine = Eng::Base::getInstance();
 
-             // Impostiamo le posizioni dei pali basandoci su questo
-             // Assumiamo che la distanza tra i pali sia fissa, es. 40 unità
-             // Oppure guarda nel tuo OVO quanto distano i pali.
-             float distance = 40.0f; // <--- PROVA A CAMBIARE QUESTO SE I PALI SONO TROPPO VICINI/LONTANI
-
-             POLE_X_POSITIONS[0] = startX;            // Palo Sinistra (dove sta il disco ora)
-             POLE_X_POSITIONS[1] = startX + distance; // Palo Centro
-             POLE_X_POSITIONS[2] = startX + (distance * 2); // Palo Destra
-
-             BASE_HEIGHT = startY; // L'altezza base è quella del disco attuale
-         }
-         // -------------------------------
-
-         for (int i = 1; i <= 7; i++) {
-             poles[0].push_back(i);
-         }
-
-         std::cout << "--- HANOI GAME STARTED ---" << std::endl;
-         updateVisuals();
-     }
+        for (int i = 0; i < 7; i++) {
+            std::string name = "Disco" + std::to_string(i + 1);
+            diskNodes[i] = engine.getNode(name);
+            if (!diskNodes[i]) {
+                std::cout << "ERROR: Node " << name << " not found" << std::endl;
+            }
+        }
 
 
-     void updateVisuals() {
-         auto& engine = Eng::Base::getInstance();
+        // Chiediamo all'Engine lo spessore senza toccare la classe Mesh!
+        DISK_HEIGHT = engine.getMeshHeight("Disco1");
+        std::cout << "[INFO] Spessore dischi letto dall'Engine: " << DISK_HEIGHT << std::endl;
 
-         const float HOVER_HEIGHT = 20.0f;
+        // Automatic calibration using the lowest disk (Disco7)
+        if (diskNodes[6]) {
+            glm::mat4 m = diskNodes[6]->get_base_matrix();
+            float startX = m[3][0];
+            float startY = m[3][1];
 
-         for (int p = 0; p < 3; p++) {
-             float currentY = 0.0f; // Altezza base relativa al palo
+            float distance = 40.0f;
+            POLE_X_POSITIONS[0] = startX;
+            POLE_X_POSITIONS[1] = startX + distance;
+            POLE_X_POSITIONS[2] = startX + distance * 2.0f;
+            BASE_HEIGHT = startY;
+        }
 
-             for (size_t i = 0; i < poles[p].size(); i++) {
-                 int diskID = poles[p][i];
-                 int diskIndex = diskID - 1;
+        for (int i = 1; i <= 7; i++) {
+            poles[0].push_back(i);
+        }
 
-                 std::string diskName = "Disco" + std::to_string(diskID);
-
-                 // Usa i nomi dei tuoi pali (Palo1, Palo2, Palo3)
-                 // Assicurati che l'array poleNodeNames sia definito nella classe o usa questa logica:
-                 std::string poleName = "Palo" + std::to_string(p + 1);
-
-                 // 1. Attacca al padre corretto
-                 engine.setParent(diskName, poleName);
-
-                 // 2. Calcola la posizione Y
-                 float drawY = currentY;
-
-                 // Se questo è il palo selezionato E questo è il disco in cima (l'ultimo)
-                 if (p == selectedSourcePole && i == poles[p].size() - 1) {
-                     drawY = HOVER_HEIGHT; 
-                 }
-                 // -------------------------------------------------
-
-                 if (diskNodes[diskIndex]) {
-                     glm::mat4 localMat = glm::mat4(1.0f);
-                     localMat = glm::translate(localMat, glm::vec3(0.0f, drawY, 0.0f));
-                     diskNodes[diskIndex]->set_base_matrix(localMat);
-                 }
-
-                 currentY += DISK_HEIGHT; // Incrementa per il prossimo disco nella pila
-             }
-         }
-     }
-
-     void handleInput(unsigned char key) {
-         int poleIndex = -1;
-         if (key == '1') poleIndex = 0;
-         else if (key == '2') poleIndex = 1;
-         else if (key == '3') poleIndex = 2;
-         else return; // Tasto non valido per il gioco
-
-         if (selectedSourcePole == -1) {
-             // --- FASE 1: Selezione Sorgente ---
-             if (poles[poleIndex].empty()) {
-                 Eng::Base::getInstance().setMessage("Palo Vuoto!");
-             }
-             else {
-                 selectedSourcePole = poleIndex;
-
-                 int diskID = poles[poleIndex].back();
-
-
-                 std::string msg = "Hai preso il Disco " + std::to_string(diskID) + " (Scegli dove metterlo)";
-                 updateVisuals();
-
-
-                 Eng::Base::getInstance().setMessage(msg);
-
-             }
-         }
-         else {
-             // --- FASE 2: Selezione Destinazione ---
-             int source = selectedSourcePole;
-             int dest = poleIndex;
-             Eng::Base::getInstance().setMessage("");
-
-             // Annulla selezione se si preme lo stesso palo
-             if (source == dest) {
-                 std::cout << "Selezione annullata." << std::endl;
-                 selectedSourcePole = -1;
-                 updateVisuals();
-                 return;
-             }
-
-             // Logica Hanoi: Verifica validità mossa
-             int diskToMove = poles[source].back(); // Il disco in cima al palo sorgente
-
-             bool validMove = true;
-             if (!poles[dest].empty()) {
-
-                 int topDiskDest = poles[dest].back();
-                 if (diskToMove < topDiskDest) { // <--- CAMBIATO DA > A <
-                     validMove = false;
-                     std::cout << "MOSSA INVALIDA: Non puoi mettere un disco GRANDE (ID "
-                         << diskToMove << ") su uno PICCOLO (ID " << topDiskDest << ")!" << std::endl;
-                 }
-
-
-             }
-
-             if (validMove) {
-                 // Esegui sposta logico
-                 poles[source].pop_back();
-                 poles[dest].push_back(diskToMove);
-                 std::cout << "Disco spostato da " << (source + 1) << " a " << (dest + 1) << std::endl;
-             }
-
-             // Resetta selezione
-             selectedSourcePole = -1;
-             updateVisuals();
-         }
-     }
-
- };
+        updateVisuals();
+    }
 
 
 
+    /**
+     * @brief Resets the game to the initial state (all disks on the first pole).
+     */
+    void reset() {
+        // Clear all poles
+        for (int p = 0; p < 3; p++) {
+            poles[p].clear();
+        }
+
+        // Add all disks back to the first pole (disk 1 to 7)
+        for (int i = 1; i <= 7; i++) {
+            poles[0].push_back(i);
+        }
+
+        // Reset the selection state
+        selectedSourcePole = -1;
+        Eng::Base::getInstance().setMessage("Game reset!");
+        history.clear();
+        redoList.clear();
+        // Update the visual representation
+        updateVisuals();
+    }
+
+    /**
+     * @brief Updates disk transforms and parent relationships in the scene.
+     */
+    void updateVisuals() {
+        auto& engine = Eng::Base::getInstance();
+        const float HOVER_HEIGHT = 20.0f;
+
+        for (int p = 0; p < 3; p++) {
+            float currentY = 0.0f;
+
+            for (size_t i = 0; i < poles[p].size(); i++) {
+                int diskID = poles[p][i];
+                int diskIndex = diskID - 1;
+
+                std::string diskName = "Disco" + std::to_string(diskID);
+                std::string poleName = "Palo" + std::to_string(p + 1);
+
+                engine.setParent(diskName, poleName);
+
+                float drawY = currentY;
+                if (p == selectedSourcePole && i == poles[p].size() - 1) {
+                    drawY = HOVER_HEIGHT;
+                }
+
+                if (diskNodes[diskIndex]) {
+                    glm::mat4 localMat(1.0f);
+                    localMat = glm::translate(localMat, glm::vec3(0.0f, drawY, 0.0f));
+                    diskNodes[diskIndex]->set_base_matrix(localMat);
+                }
+
+                currentY += DISK_HEIGHT;
+            }
+        }
+    }
+
+
+    /**
+     * @brief Esegue una mossa annullata (Redo)
+     */
+    void redoMove() {
+        if (redoList.empty()) {
+            Eng::Base::getInstance().setMessage("Nothing to redo!");
+            return;
+        }
+
+        Move m = redoList.back();
+        redoList.pop_back();
+
+        // Eseguiamo la mossa
+        int diskToMove = poles[m.sourcePole].back();
+        poles[m.sourcePole].pop_back();
+        poles[m.destPole].push_back(diskToMove);
+
+        // Aggiungiamo alla storia
+        history.push_back(m);
+
+        selectedSourcePole = -1; // Deseleziona tutto
+        updateVisuals();
+        Eng::Base::getInstance().setMessage("Redo move.");
+    }
+
+
+    /**
+     * @brief Annulla l'ultima mossa (Undo)
+     */
+    void undoMove() {
+        if (history.empty()) {
+            Eng::Base::getInstance().setMessage("Nothing to undo!");
+            return;
+        }
+
+        Move m = history.back();
+        history.pop_back();
+
+        // Attenzione: nell'Undo, la destPole diventa la sourcePole (la mossa va al contrario)
+        int diskToMove = poles[m.destPole].back();
+        poles[m.destPole].pop_back();
+        poles[m.sourcePole].push_back(diskToMove);
+
+        // Aggiungiamo alla lista redo per poterla rifare
+        redoList.push_back(m);
+
+        selectedSourcePole = -1; // Deseleziona tutto
+        updateVisuals();
+        Eng::Base::getInstance().setMessage("Undo move.");
+    }
+    /**
+     * @brief Handles keyboard input for game actions.
+     */
+    void handleInput(unsigned char key) {
+        int poleIndex = -1;
+        if (key == '1') poleIndex = 0;
+        else if (key == '2') poleIndex = 1;
+        else if (key == '3') poleIndex = 2;
+        else return;
+
+        if (selectedSourcePole == -1) {
+            // [Il tuo codice per selezionare il disco rimane invariato]
+            if (poles[poleIndex].empty()) {
+                Eng::Base::getInstance().setMessage("Empty pole!");
+            }
+            else {
+                selectedSourcePole = poleIndex;
+                int diskID = poles[poleIndex].back();
+                Eng::Base::getInstance().setMessage(
+                    "Selected disk " + std::to_string(diskID) + ". Choose destination pole."
+                );
+                updateVisuals();
+            }
+        }
+        else {
+            int source = selectedSourcePole;
+            int dest = poleIndex;
+            Eng::Base::getInstance().setMessage("");
+
+            if (source == dest) {
+                selectedSourcePole = -1;
+                updateVisuals();
+                return;
+            }
+
+            int diskToMove = poles[source].back();
+            bool validMove = true;
+
+            if (!poles[dest].empty()) {
+                int topDiskDest = poles[dest].back();
+                if (diskToMove < topDiskDest) {
+                    validMove = false;
+                }
+            }
+
+            if (validMove) {
+                poles[source].pop_back();
+                poles[dest].push_back(diskToMove);
+
+                // --- MODIFICA QUI: Salva la mossa nella storia e svuota i Redo ---
+                history.push_back({ source, dest });
+                redoList.clear();
+            }
+            else {
+                Eng::Base::getInstance().setMessage("Invalid move!");
+            }
+
+            selectedSourcePole = -1;
+            updateVisuals();
+        }
+    }
+
+    
+};
+
+//=================
+// Global Game
+//=================
 
 HanoiGame game;
 
+//=================
+// Input Callback
+//=================
 
+/**
+ * @brief Keyboard callback for camera control and game interaction.
+ */
 void keyboardCallback(unsigned char key, int x, int y) {
-    // Ottieni l'istanza dell'engine
     Eng::Base& eng = Eng::Base::getInstance();
     game.handleInput(key);
 
-    float dt = 1.0f; // Delta time fittizio
+    float dt = 1.0f;
 
-    // Usa tolower per uniformare maiuscole/minuscole
     switch (tolower(key)) {
 
-        // --- MOVIMENTO WASD ---
+    case 'z':
+        game.undoMove();
+        break;
+
+    case 'x':
+        game.redoMove();
+        break;
     case 'w': eng.moveCamera(eng::FORWARD, dt); break;
     case 's': eng.moveCamera(eng::BACKWARD, dt); break;
     case 'a': eng.moveCamera(eng::LEFT, dt); break;
     case 'd': eng.moveCamera(eng::RIGHT, dt); break;
-    case 'q': eng.moveCamera(eng::UP, dt); break;   // Opzionale
-    case 'e': eng.moveCamera(eng::DOWN, dt); break; // Opzionale
+    case 'q': eng.moveCamera(eng::UP, dt); break;
+    case 'e': eng.moveCamera(eng::DOWN, dt); break;
 
-        // --- ROTAZIONE ---
+
     case 'k':
-        eng.rotateCamera(-90.0f);
-        std::cout << "Ruotato di 90 gradi" << std::endl;
+        eng.pitchCamera(-5.0f); // Guarda verso il basso
         break;
 
-        // --- VISUALE LATERALE (J) ---
-    case 'j': {
+    case 'i':
+        eng.pitchCamera(5.0f);  // Guarda verso l'alto
+        break;
+
+    case 'j':
+        eng.rotateCamera(-5.0f);
+        break;
+
+    case 'l':
+
+        eng.rotateCamera(5.0f);
+        break;
+
+    case 'o': {
         static bool isSideView = false;
         if (!isSideView) {
-            // Vai di lato: Pos(60, 10, -40), Up(0,1,0), Yaw(-180), Pitch(0)
             eng.setCameraPosition(glm::vec3(60.0f, 10.0f, -40.0f), glm::vec3(0.0f, 1.0f, 0.0f), -180.0f, 0.0f);
-            isSideView = true;
         }
         else {
-            // Torna normale
             eng.setCameraPosition(glm::vec3(0.0f, 10.0f, 50.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
-            isSideView = false;
         }
+        isSideView = !isSideView;
         break;
     }
 
-            // --- VISTA DALL'ALTO (U) ---
+
     case 'u': {
         static bool isTopView = false;
         if (!isTopView) {
-            // Vai sopra: Pos(0, 60, -40), Yaw(-90), Pitch(-89)
             eng.setCameraPosition(glm::vec3(0.0f, 60.0f, -40.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -89.0f);
-            std::cout << "Visuale: ALTO" << std::endl;
-            isTopView = true;
         }
         else {
-            // Reset normale
             eng.setCameraPosition(glm::vec3(0.0f, 10.0f, 50.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
-            std::cout << "Visuale: NORMALE" << std::endl;
-            isTopView = false;
         }
+        isTopView = !isTopView;
         break;
     }
 
-            // ESC per uscire
+    case 'r':
+        game.reset();
+        break;
+
+    case 'v':
+        eng.toggleCameraProjection();
+        break;
+
+    // --- NUOVI TASTI PER IL LOD ---
+    case '+':
+    case '=':
+        eng.detail++;
+        // Mettiamo un limite massimo (dal tuo log di 3ds max avevi fino a 4 o 5 LOD)
+        if (eng.detail > 4) eng.detail = 4;
+        break;
+
+    case '-':
+        eng.detail--;
+        // Il LOD non può scendere sotto lo zero (0 = Qualità Massima)
+        if (eng.detail < 0) eng.detail = 0;
+        break;
+
+  
+
     case 27:
         eng.free();
         exit(0);
-        break;
-    };
-    
- 
-
-
-
-
+    }
 }
 
-
-
-//////////
-// MAIN //
-//////////
+//=================
+// Main
+//=================
 
 /**
- * Application entry point.
- * @param argc number of command-line arguments passed
- * @param argv array containing up to argc passed arguments
- * @return error code (0 on success, error code otherwise)
+ * @brief Application entry point.
  */
-int main(int argc, char *argv[])
-{
-   // Credits:
-   std::cout << "Client application example, A. Peternier (C) SUPSI" << std::endl;
-   std::cout << std::endl;
+int main(int argc, char* argv[]) {
+    std::cout << "Client application example, A. Peternier (C) SUPSI" << std::endl;
 
-   // Init engine:
-   Eng::Base &eng = Eng::Base::getInstance();
- 
-   eng.setKeyboardCallback(keyboardCallback);
-   
-   eng.init("My OpenGL window", 640, 480,argc,argv);
-   eng.loadTexture("Wood094_1K-PNG_Color.dds", "Base");
-   eng.loadTexture("Wood094_1K-PNG_Color.dds", "Palo1");
-   eng.loadTexture("Wood094_1K-PNG_Color.dds", "Palo2");
-   eng.loadTexture("Wood094_1K-PNG_Color.dds", "Palo3");
-   eng.loadTexture("rinGrafica.dds", "RinWall");
+    Eng::Base& eng = Eng::Base::getInstance();
+    eng.setKeyboardCallback(keyboardCallback);
 
-   eng.createOrb(0.0f, 5.0f, -47.0f);
-   eng.createOrb(0.0f, 5.0f, -65.0f);
-   
-   
-   eng.addText(eng::TextHUD("[ 1, 2, 3 ] : SELEZIONA DISCO", 10.0f, 20.0f, 1.0f, 1.0f, 0.0f));
-   eng::TextHUD istruzioniData("[ J ] : Vista Laterale", 10.0f, 35.0f, 0.6f, 0.8f, 1.0f);
-   eng.addText(istruzioniData);
-   eng.addText(eng::TextHUD("[ W, A, S, D ] : Camera", 10.0f, 50.0f, 0.6f, 0.8f, 1.0f));
-   game.init();
-   
-   eng.startLoop();
-   
+    eng.init("My OpenGL window", 640, 480, argc, argv);
 
- 
+
+    //eng.addLight(10, 5, 0, 1, 0, 0, 1);
+    eng.createOrb(0.0f, 5.0f, -47.0f);
+    eng.createOrb(0.0f, 5.0f, -65.0f);
+
+    eng.addText(eng::TextHUD("[ 1, 2, 3 [ Z, X]] : Select disk UNDO REDO", 10.0f, 20.0f, 1.0f, 1.0f, 0.0f));
+    eng.addText(eng::TextHUD("[ J, L, I, K ] : Rotate Camera", 10.0f, 35.0f, 0.6f, 0.8f, 1.0f));
+    eng.addText(eng::TextHUD("[ W, A, S, D ] : Move Camera", 10.0f, 50.0f, 0.6f, 0.8f, 1.0f));
+    eng.addText(eng::TextHUD("[ U ] : Up view", 10.0f, 65.0f, 0.6f, 0.8f, 1.0f));
+    eng.addText(eng::TextHUD("[ Q,E ] : UP,DOWN Move", 10.0f, 80.0f, 0.6f, 0.8f, 1.0f));
+    eng.addText(eng::TextHUD("[ R, O ] : Reset Game/Camera", 10.0f, 95.0f, 1.0f, 0.5f, 0.0f));
+    eng.addText(eng::TextHUD("[ +, - ] : Change LOD level", 10.0f, 110.0f, 1.0f, 1.0f, 0.0f));
+    eng.addText(eng::TextHUD("[ V ] : Toggle Ortho/Perspective", 10.0f, 125.0f, 1.0f, 0.8f, 0.2f));
+  
    
+    //se maggiore ombra piu piccola
+    eng.addShadow("Saber1", 0.0f, 500.0f, 0.0f);
+    eng.addShadow("Table", 0.0f, 30.0f, 0.0f);
 
-   // Release engine:
-   eng.free();
+    game.init();
+    eng.startLoop();
 
-   // Done:
-   std::cout << "\n[application terminated]" << std::endl;
-   return 0;
+    eng.free();
+    return 0;
 }
-
-
-
-
-
-
-
-
