@@ -8,7 +8,7 @@
 [![Graphics API](https://img.shields.io/badge/OpenGL-Core-5586A4.svg?logo=opengl)](https://www.opengl.org/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)]()
 [![Build](https://img.shields.io/badge/CI-GitLab%20Pipeline-orange.svg?logo=gitlab)]()
-[![Status](https://img.shields.io/badge/status-in%20sviluppo-yellow.svg)]()
+[![Status](https://img.shields.io/badge/status-completato-brightgreen.svg)]()
 
 </div>
 
