@@ -116,11 +116,11 @@ L'intera implementazione interna è nascosta dietro un pattern **PIMPL**, così 
         ┌──────────▼───────────┐
         │   engine (facade)    │
         │  ─────────────────   │
-        │  scene_manager        │
-        │  light_manager        │
-        │  renderer              │
-        │  hud_manager            │
-        └──────────┬────────────┘
+        │  scene_manager       │
+        │  light_manager       │
+        │  renderer            │
+        │  hud_manager         │
+        └──────────┬───────────┘
                     │
    ┌────────────────┼─────────────────┐
    ▼                ▼                 ▼
